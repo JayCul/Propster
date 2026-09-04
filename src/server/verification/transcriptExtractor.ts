@@ -148,7 +148,7 @@ export function extractWithRules(
   const facts: Record<string, unknown> = { reached_contact: true };
 
   // --- Availability -------------------------------------------------------
-  if (/\b(no longer available|not available|已|it'?s gone|been (let|taken|rented))\b/.test(said)) {
+  if (/\b(no longer available|not available|it'?s gone|been (let|taken|rented))\b/.test(said)) {
     facts.property_available = false;
   } else if (/\b(still available|it is available|yes,? it is|available)\b/.test(said)) {
     facts.property_available = true;
