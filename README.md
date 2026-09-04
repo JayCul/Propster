@@ -653,6 +653,26 @@ The entire workflow, UI and state machine continue to run against a
 deterministic simulated provider, and every simulated call is labelled as such
 in the interface.
 
+### Deploying on serverless
+
+The application runs on any Node host. Two notes for serverless platforms,
+where each request may be served by a different instance:
+
+- The simulated phone provider is **stateless by design**: a demo call carries
+  its start time, scenario and listing context inside its own call id, so any
+  instance can answer a poll for a call it did not start. Demo mode therefore
+  works identically on Vercel, Netlify, Render or a long-lived Node process.
+- The rate limiter in `src/server/rateLimit.ts` keeps its counters in process
+  memory, so on a multi-instance host the effective limits are per instance
+  rather than global. That loosens them; it does not disable them, and the
+  consent flag, allowlist and E.164 validation are unaffected. Moving the
+  counters to Postgres or Redis is the fix for a real deployment.
+
+Use the **pooled** Neon connection string for `DATABASE_URL` on serverless, and
+the direct one for `DIRECT_DB_URL`. `prisma generate` must run at build time;
+the `build` script does not do this for you, so set the platform's build
+command to `prisma generate && next build`.
+
 ### Data handling
 
 - Secrets live only in `.env`, which is gitignored. Nothing is prefixed
