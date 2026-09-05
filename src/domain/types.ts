@@ -30,7 +30,10 @@ export type CallStatus =
   | "in_progress"
   | "completed"
   | "failed"
+  /** Rang, but nobody picked up. */
   | "no_answer"
+  /** The contact actively rejected the call, or hung up on it. */
+  | "declined"
   | "canceled";
 
 /** What the user is looking for, after extraction and validation. */

@@ -148,25 +148,55 @@ export function mapCallStatus(call: Call): CallStatus {
     }
     case "canceled":
       return "canceled";
-    case "failed":
-      return failureToStatus(call.failureCode ?? call.recipients[0]?.attempts.at(-1)?.failureCode);
+    case "failed": {
+      const attempt = call.recipients[0]?.attempts.at(-1);
+      return failureToStatus(
+        call.failureCode ?? attempt?.failureCode,
+        call.failureMessage ?? attempt?.failureMessage,
+      );
+    }
     case "completed": {
       const recipient = call.recipients[0];
-      if (recipient && recipient.status === "failed") {
-        return failureToStatus(recipient.attempts.at(-1)?.failureCode);
+      const attempt = recipient?.attempts.at(-1);
+
+      // CALL-E can mark the TASK completed while the ATTEMPT failed, and the
+      // two do not always flip in the same poll. An observed call reported
+      // task=completed with attempt DECLINED, which read as a successful call
+      // that produced nothing. Trust the attempt whenever it says it failed.
+      if (recipient?.status === "failed" || attempt?.status === "failed") {
+        return failureToStatus(attempt?.failureCode, attempt?.failureMessage);
       }
       return "completed";
     }
   }
 }
 
-function failureToStatus(failureCode: string | null | undefined): CallStatus {
-  if (!failureCode) return "failed";
-  const code = failureCode.toLowerCase();
-  if (code.includes("no_answer") || code.includes("noanswer") || code.includes("busy")) {
+/**
+ * Classify why a call did not produce a conversation.
+ *
+ * CALL-E reports the reason in two places and not always the same way: a
+ * machine-readable `failure_code`, and a human string on the attempt such as
+ * "calling task status=DECLINED (Hangup by: user)". Both are searched, because
+ * an observed live call carried the useful detail only in the message.
+ */
+function failureToStatus(
+  failureCode: string | null | undefined,
+  failureMessage?: string | null,
+): CallStatus {
+  const haystack = ((failureCode ?? "") + " " + (failureMessage ?? "")).toLowerCase();
+  if (haystack.trim() === "") return "failed";
+  if (haystack.includes("declin") || haystack.includes("reject") || haystack.includes("hangup by")) {
+    return "declined";
+  }
+  if (
+    haystack.includes("no_answer") ||
+    haystack.includes("noanswer") ||
+    haystack.includes("no answer") ||
+    haystack.includes("busy")
+  ) {
     return "no_answer";
   }
-  if (code.includes("cancel")) return "canceled";
+  if (haystack.includes("cancel")) return "canceled";
   return "failed";
 }
 

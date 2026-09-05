@@ -57,6 +57,7 @@ export function verificationStatusForCall(call: CallStatus): VerificationStatus 
       return "in_progress";
     case "failed":
     case "no_answer":
+    case "declined":
     case "canceled":
       return "failed";
     case "completed":

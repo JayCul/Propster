@@ -329,7 +329,7 @@ export async function refreshVerification(verificationId: string): Promise<Verif
         verification.id,
         verification.propertyId,
         result?.failureCode ?? callStatus,
-        userMessageForCallFailure(callStatus, result?.failureCode),
+        userMessageForCallFailure(callStatus, result?.failureCode, result?.failureMessage),
       );
       return snapshot(verification.id);
     }
@@ -438,17 +438,38 @@ export async function applyCallResult(
   }
 
   if (!facts) {
+    // A call that produced nothing at all is not an extraction failure.
+    //
+    // Blaming extraction when there was never a conversation to extract from
+    // tells the user the wrong thing: an observed call was declined by the
+    // recipient, and Propster reported that "the answers could not be read
+    // reliably". The two cases are distinguished by whether there was any
+    // material to work with.
+    const producedNothing = result.structuredResult === null && result.transcript.length === 0;
+
     logger.warn("verification.no_usable_facts", {
       verificationId,
-      hadStructuredResult: result.structuredResult !== null,
+      producedNothing,
+      callStatus: result.status,
+      failureCode: result.failureCode,
       transcriptTurns: result.transcript.length,
     });
-    await failVerification(
-      verificationId,
-      property.id,
-      "extraction_failed",
-      "The call completed but the answers could not be read reliably. This property has not been verified.",
-    );
+
+    if (producedNothing) {
+      await failVerification(
+        verificationId,
+        property.id,
+        result.failureCode ?? result.status,
+        userMessageForCallFailure(result.status, result.failureCode, result.failureMessage),
+      );
+    } else {
+      await failVerification(
+        verificationId,
+        property.id,
+        "extraction_failed",
+        "The call connected but the answers could not be read reliably. This property has not been verified.",
+      );
+    }
     return;
   }
 
@@ -797,11 +818,41 @@ function isFatalProviderCode(code: string): boolean {
   ].includes(code);
 }
 
-function userMessageForCallFailure(status: CallStatus, code?: string): string {
-  if (status === "no_answer" || code === "no_answer" || code === "busy") {
+/**
+ * Say what actually happened, in the user's terms.
+ *
+ * The distinction matters: "nobody picked up" invites a retry later, "they
+ * declined" suggests the contact does not want automated calls, and neither is
+ * the same as the software failing. The provider's own message is searched as
+ * well as its code, because an observed declined call carried the detail only
+ * in the message.
+ */
+function userMessageForCallFailure(
+  status: CallStatus,
+  code?: string,
+  providerMessage?: string,
+): string {
+  const haystack = ((code ?? "") + " " + (providerMessage ?? "")).toLowerCase();
+
+  if (
+    status === "declined" ||
+    haystack.includes("declin") ||
+    haystack.includes("reject") ||
+    haystack.includes("hangup by")
+  ) {
+    return "The contact declined the call, so this property has not been verified.";
+  }
+  if (
+    status === "no_answer" ||
+    haystack.includes("no_answer") ||
+    haystack.includes("no answer") ||
+    haystack.includes("busy")
+  ) {
     return "Nobody answered on the listing's number, so it has not been verified.";
   }
-  if (status === "canceled") return "The verification call was cancelled before it completed.";
+  if (status === "canceled" || haystack.includes("cancel")) {
+    return "The verification call was cancelled before it completed.";
+  }
   return "The verification call did not complete. This property has not been verified.";
 }
 
