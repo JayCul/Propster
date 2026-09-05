@@ -5,7 +5,7 @@
   "description": "AI property verification and discovery. Searches listings, then calls the agent to verify them.",
   "scripts": {
     "dev": "next dev --port 3100",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start --port 3100",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
@@ -17,7 +17,8 @@
     "setup": "prisma generate && prisma db push && npm run db:seed",
     "calle:smoke": "tsx --env-file-if-exists=.env scripts/calle-smoke.mts",
     "vendor:images": "tsx --env-file-if-exists=.env scripts/vendor-images.mts",
-    "llm:check": "tsx --env-file-if-exists=.env scripts/llm-check.mts"
+    "llm:check": "tsx --env-file-if-exists=.env scripts/llm-check.mts",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
