@@ -179,11 +179,33 @@ export function mapCallStatus(call: Call): CallStatus {
  * "calling task status=DECLINED (Hangup by: user)". Both are searched, because
  * an observed live call carried the useful detail only in the message.
  */
+/**
+ * SIP response codes CALL-E passes through verbatim as the attempt's failure
+ * code. They are far more precise than the prose that accompanies them: an
+ * observed rejected call carried failure code "603" with a duration of zero
+ * seconds, which is the network declining before the handset ever rang.
+ */
+const SIP_STATUS: Record<string, CallStatus> = {
+  "486": "no_answer", // Busy Here
+  "480": "no_answer", // Temporarily Unavailable
+  "408": "no_answer", // Request Timeout
+  "603": "declined", // Decline
+  "607": "declined", // Unwanted, reported as spam by the callee
+  "403": "declined", // Forbidden, typically a network-level block
+  "604": "failed", // Does Not Exist Anywhere
+  "484": "failed", // Address Incomplete
+  "487": "canceled", // Request Terminated
+};
+
 function failureToStatus(
   failureCode: string | null | undefined,
   failureMessage?: string | null,
 ): CallStatus {
-  const haystack = ((failureCode ?? "") + " " + (failureMessage ?? "")).toLowerCase();
+  const code = (failureCode ?? "").trim();
+  const bySip = SIP_STATUS[code];
+  if (bySip) return bySip;
+
+  const haystack = (code + " " + (failureMessage ?? "")).toLowerCase();
   if (haystack.trim() === "") return "failed";
   if (haystack.includes("declin") || haystack.includes("reject") || haystack.includes("hangup by")) {
     return "declined";

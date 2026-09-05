@@ -87,6 +87,33 @@ describe("declined calls", () => {
     expect(mapCallStatus(buildCall({ status: "completed" }))).toBe("completed");
   });
 
+  it("reads the SIP code, which is more precise than the prose", () => {
+    // The observed call carried failure code "603" (Decline) on the attempt.
+    const declined = buildCall({
+      status: "failed",
+      attemptStatus: "failed",
+      recipientStatus: "failed",
+      failureCode: "603",
+    });
+    expect(mapCallStatus(declined)).toBe("declined");
+
+    const busy = buildCall({
+      status: "failed",
+      attemptStatus: "failed",
+      recipientStatus: "failed",
+      failureCode: "486",
+    });
+    expect(mapCallStatus(busy)).toBe("no_answer");
+
+    const gone = buildCall({
+      status: "failed",
+      attemptStatus: "failed",
+      recipientStatus: "failed",
+      failureCode: "604",
+    });
+    expect(mapCallStatus(gone)).toBe("failed");
+  });
+
   it("distinguishes no answer from a decline", () => {
     const noAnswer = buildCall({
       status: "failed",

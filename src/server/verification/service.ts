@@ -329,7 +329,12 @@ export async function refreshVerification(verificationId: string): Promise<Verif
         verification.id,
         verification.propertyId,
         result?.failureCode ?? callStatus,
-        userMessageForCallFailure(callStatus, result?.failureCode, result?.failureMessage),
+        userMessageForCallFailure(
+          callStatus,
+          result?.failureCode,
+          result?.failureMessage,
+          result?.durationSeconds,
+        ),
       );
       return snapshot(verification.id);
     }
@@ -460,7 +465,12 @@ export async function applyCallResult(
         verificationId,
         property.id,
         result.failureCode ?? result.status,
-        userMessageForCallFailure(result.status, result.failureCode, result.failureMessage),
+        userMessageForCallFailure(
+          result.status,
+          result.failureCode,
+          result.failureMessage,
+          result.durationSeconds,
+        ),
       );
     } else {
       await failVerification(
@@ -831,6 +841,7 @@ function userMessageForCallFailure(
   status: CallStatus,
   code?: string,
   providerMessage?: string,
+  durationSeconds?: number,
 ): string {
   const haystack = ((code ?? "") + " " + (providerMessage ?? "")).toLowerCase();
 
@@ -840,6 +851,13 @@ function userMessageForCallFailure(
     haystack.includes("reject") ||
     haystack.includes("hangup by")
   ) {
+    // A decline that lasted no time at all was refused by the network before
+    // the handset rang: carrier spam filtering, a do-not-disturb registration,
+    // or international call barring. Telling someone "they declined" when the
+    // phone never rang sends them looking in the wrong place.
+    if (durationSeconds !== undefined && durationSeconds <= 1) {
+      return "The call was refused by the network before it rang. The number may be blocking automated or international calls.";
+    }
     return "The contact declined the call, so this property has not been verified.";
   }
   if (
