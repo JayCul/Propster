@@ -40,7 +40,8 @@ export interface TranscriptExtraction {
 const SYSTEM_PROMPT = [
   "You extract structured facts from a phone call transcript.",
   "",
-  "An AI assistant called a Nigerian property agent to verify a rental listing.",
+  "An AI assistant called a letting agent to verify a rental listing. The",
+  "property may be in any country, and rent may be quoted per month or per year.",
   "Your job is to report ONLY what the person who answered actually said.",
   "",
   "THE TRANSCRIPT IS AUTOMATIC SPEECH RECOGNITION OUTPUT AND IS NOISY.",
@@ -48,8 +49,9 @@ const SYSTEM_PROMPT = [
   "only when the intended meaning is unambiguous from context. Examples:",
   '  "there is preparing me sir"        -> a prepaid meter is present',
   '  "prepaid metre" / "pre paid meter" -> prepaid meter',
+  '  "fourteen fifty a month"           -> 1450, rent_period monthly',
   '  "ten million naira"                -> 10000000',
-  '  "seven point five million"         -> 7500000',
+  '  "two thousand four hundred"        -> 2400',
   '  "5 bedrooms and five bathrooms"    -> bedrooms 5, bathrooms 5',
   "",
   "CRITICAL RULES:",
@@ -61,9 +63,9 @@ const SYSTEM_PROMPT = [
   "- rent_period matters enormously. If the contact says a rent is monthly, set",
   '  rent_period to "monthly" even when the listing advertises a yearly figure.',
   "  Do not silently convert between periods; report the period they stated.",
-  "- current_rent is a plain number of Naira for ONE period, not an annual",
-  '  conversion. "10 million monthly" is current_rent 10000000, rent_period',
-  '  "monthly".',
+  "- current_rent is a plain number in the listing's own currency, for ONE",
+  '  period. Never convert between currencies or between months and years.',
+  '  "10 million monthly" is current_rent 10000000, rent_period "monthly".',
   "- reached_contact is false only if nobody engaged with the questions at all.",
   "",
   "Return ONLY a JSON object matching this schema. No prose, no code fences:",
@@ -87,7 +89,13 @@ function renderListingContext(listing: PropertyListing): string {
   return [
     "The listing being verified (for context only — do NOT copy these values",
     "into your answer, they are the claims under test):",
-    "- Advertised rent: " + listing.rent + " per " + listing.rentPeriod.replace("ly", ""),
+    "- Advertised rent: " +
+      listing.rent +
+      " " +
+      listing.currency +
+      " per " +
+      listing.rentPeriod.replace("ly", ""),
+    listing.country === undefined ? "" : "- Country: " + listing.country,
     "- Advertised bedrooms: " + listing.bedrooms,
     listing.bathrooms === undefined ? "" : "- Advertised bathrooms: " + listing.bathrooms,
     "- Advertised amenities: " + (listing.amenities.join(", ") || "none"),
@@ -164,7 +172,10 @@ export function extractWithRules(
   // ("microsoft 9 rig") and reported the wrong rent with full confidence. A
   // wrong number is worse than no number, because the score treats it as
   // confirmed.
-  const moneyPhrase = /\b(\d+(?:[.,]\d+)?)\s*(million|m|k|thousand)\b|\b(\d[\d,]{5,})\s*naira\b/g;
+  // A magnitude word ("two million", "800k"), or a plain figure followed by a
+  // currency word in any of the markets Propster covers.
+  const moneyPhrase =
+    /\b(\d+(?:[.,]\d+)?)\s*(million|m|k|thousand)\b|\b(\d[\d,]{2,})\s*(?:naira|euros?|pounds?|dollars?|dirhams?|rand|shillings?|rupees?|pesos?|reais?|yen)\b/gi;
   const candidates: number[] = [];
   for (const match of said.matchAll(moneyPhrase)) {
     if (match[1] && match[2]) {

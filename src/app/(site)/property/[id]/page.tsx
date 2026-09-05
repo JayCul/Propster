@@ -15,7 +15,9 @@ import {
 } from "@/components/ui";
 import { amenityLabel, canonicalizeAmenities } from "@/domain/amenities";
 import { formatDuration } from "@/domain/format";
-import { formatNaira, summariseDiscrepancy, toAnnual } from "@/domain/discrepancy";
+import { summariseDiscrepancy, toAnnual } from "@/domain/discrepancy";
+import { formatMoney, formatMoneyExact } from "@/domain/money";
+import { maskPhone } from "@/domain/phone";
 import type { PropertyDiscrepancy, TranscriptTurn } from "@/domain/types";
 import { ApiError } from "@/server/http";
 import { getPropertyDetail, type PropertyDetailView } from "@/server/readModel";
@@ -41,7 +43,6 @@ export default async function PropertyPage({
   }
 
   const { listing, verification, breakdown, call, status } = view;
-  const annual = toAnnual(listing.rent, listing.rentPeriod);
   const isRunning = status === "pending" || status === "in_progress";
 
   const fees = verification
@@ -87,8 +88,10 @@ export default async function PropertyPage({
 
             <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
               <span className="tabular text-2xl font-semibold tracking-[-0.02em] text-ink-900">
-                {formatNaira(annual)}
-                <span className="ml-1.5 text-sm font-normal text-ink-500">/ year</span>
+                {formatMoney(listing.rent, listing.currency)}
+                <span className="ml-1.5 text-sm font-normal text-ink-500">
+                  / {listing.rentPeriod === "monthly" ? "month" : "year"}
+                </span>
               </span>
               <span className="inline-flex items-center gap-1.5 text-sm text-ink-600">
                 <BedIcon className="text-ink-400" />
@@ -183,11 +186,12 @@ export default async function PropertyPage({
                     <Confirmation
                       ok
                       text={
-                        formatNaira(
+                        formatMoney(
                           toAnnual(
                             verification.currentRent,
                             verification.rentPeriod ?? listing.rentPeriod,
                           ),
+                          verification.currency ?? listing.currency,
                         ) + " annual rent"
                       }
                     />
@@ -274,7 +278,7 @@ export default async function PropertyPage({
                           ) : value === 0 ? (
                             "Free"
                           ) : (
-                            "₦" + value.toLocaleString("en-NG")
+                            formatMoneyExact(value, listing.currency)
                           )}
                         </td>
                       </tr>
@@ -284,7 +288,7 @@ export default async function PropertyPage({
                         Confirmed upfront total
                       </td>
                       <td className="tabular px-6 py-3 text-right font-semibold text-ink-900">
-                        ₦{feeTotal.toLocaleString("en-NG")}
+                        {formatMoneyExact(feeTotal, listing.currency)}
                       </td>
                     </tr>
                   </tbody>
@@ -638,12 +642,6 @@ function Row({ label, value }: { label: string; value: string }) {
       <dd className="text-[13px] font-medium text-ink-900">{value}</dd>
     </div>
   );
-}
-
-/** Never render a full contact number in the UI. */
-function maskPhone(phone: string): string {
-  if (phone.length <= 5) return "•••••";
-  return phone.slice(0, 4) + " ••• " + phone.slice(-3);
 }
 
 function capitalise(value: string): string {

@@ -91,7 +91,7 @@ export function Hero() {
           style={{ ["--reveal-delay" as string]: "0ms" }}
         >
           <p className="type-info text-[10px] text-white">Property intelligence</p>
-          <p className="type-info mt-1.5 text-[10px] text-white/55">Lagos · Nigeria</p>
+          <p className="type-info mt-1.5 text-[10px] text-white/55">Wherever you are renting</p>
         </div>
 
         {/* Headline. Sits low in the frame so the upper two thirds stay
@@ -177,10 +177,10 @@ export function Hero() {
         <div className="animate-drift border border-white/20 bg-void-900/75 p-5 backdrop-blur-xl">
           <p className="type-info text-[9px] text-white/40">Property #04</p>
 
-          <p className="mt-4 text-[15px] leading-tight text-white">Lekki Phase 1</p>
+          <p className="mt-4 text-[15px] leading-tight text-white">Príncipe Real, Lisbon</p>
 
-          <p className="type-data mt-3 text-2xl font-medium text-white">₦7.5M</p>
-          <p className="type-info mt-0.5 text-[9px] text-white/40">per year</p>
+          <p className="type-data mt-3 text-2xl font-medium text-white">€1,650</p>
+          <p className="type-info mt-0.5 text-[9px] text-white/40">per month</p>
 
           <div className="mt-5 h-px w-full bg-white/15" />
 

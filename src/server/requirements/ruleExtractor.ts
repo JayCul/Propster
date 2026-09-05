@@ -2,42 +2,57 @@ import {
   propertySearchRequirementSchema,
   type ParsedRequirement,
 } from "@/domain/schemas";
+import { marketDefaults, type Currency } from "@/domain/money";
 
 /**
  * Deterministic natural-language requirement parser.
  *
- * This is the fallback when no Claude key is configured, and the safety net
- * when Claude returns something that fails validation. It handles the notation
- * Nigerian renters actually use: "8m", "₦8 million", "N8,000,000", "800k/month".
+ * This is the fallback when no model key is configured, and the safety net when
+ * the model returns something that fails validation. It handles the notation
+ * renters actually use across markets: "€1,450", "$2,300 a month", "8m",
+ * "₦8 million", "800k pcm".
  *
  * It is intentionally conservative. A field it cannot read confidently is left
  * undefined rather than guessed, because a wrong budget silently filters out
  * the property the user wanted.
  */
 
+/**
+ * Cities and districts the deterministic parser can recognise.
+ *
+ * This list exists only so the fallback works without a language model; it is
+ * not a limit on where Propster operates. The model path handles any place
+ * name, and a listing carries whatever location it was created with. More
+ * specific entries come first so "Lisbon" does not win over "Campo de Ourique".
+ */
 const KNOWN_AREAS = [
-  "Lekki Phase 1",
-  "Lekki Phase 2",
-  "Lekki",
-  "Ikate",
-  "Agungi",
-  "Osapa London",
-  "Osapa",
-  "Chevron",
-  "Sangotedo",
-  "Ajah",
-  "Victoria Island",
-  "Ikoyi",
-  "Yaba",
-  "Ikeja GRA",
-  "Ikeja",
-  "Surulere",
-  "Magodo",
-  "Gbagada",
-  "Maryland",
-  "Oniru",
-  "Banana Island",
-  "Lagos",
+  // Portugal
+  "Campo de Ourique", "Principe Real", "Príncipe Real", "Alcantara", "Alcântara",
+  "Arroios", "Graca", "Graça", "Belem", "Belém", "Lisbon", "Lisboa", "Porto",
+  // Spain
+  "Eixample", "Gracia", "Gràcia", "Barcelona", "Madrid",
+  // Germany
+  "Prenzlauer Berg", "Kreuzberg", "Neukolln", "Neukölln", "Mitte", "Berlin", "Munich",
+  // United Kingdom
+  "London Fields", "Hackney", "Shoreditch", "Islington", "Camden", "Peckham",
+  "London", "Manchester", "Edinburgh", "Bristol",
+  // Ireland, Netherlands, France
+  "Dublin", "Amsterdam", "Rotterdam", "Paris", "Lyon",
+  // United States and Canada
+  "East Austin", "Austin", "Brooklyn", "Queens", "Manhattan", "New York",
+  "Chicago", "Seattle", "Denver", "Roncesvalles", "Toronto", "Vancouver", "Montreal",
+  // Middle East
+  "Jumeirah Lake Towers", "Jumeirah", "Dubai Marina", "Downtown Dubai", "Dubai",
+  "Abu Dhabi", "Doha",
+  // Africa
+  "Sea Point", "Green Point", "Woodstock", "Cape Town", "Johannesburg", "Sandton",
+  "Westlands", "Kilimani", "Nairobi", "Accra", "Lekki Phase 1", "Lekki", "Ikoyi",
+  "Victoria Island", "Yaba", "Ikeja", "Ajah", "Lagos", "Abuja",
+  // Asia and Oceania
+  "Tiong Bahru", "Orchard", "Singapore", "Bengaluru", "Bangalore", "Mumbai",
+  "Delhi", "Tokyo", "Osaka", "Hong Kong", "Melbourne", "Sydney", "Brisbane", "Auckland",
+  // Latin America
+  "Condesa", "Roma Norte", "Mexico City", "Sao Paulo", "São Paulo", "Bogota", "Bogotá",
 ];
 
 const PROPERTY_TYPES: Array<[RegExp, string]> = [
@@ -69,7 +84,36 @@ const AMENITY_PATTERNS: Array<[RegExp, string]> = [
   [/\bpets?\b/i, "pets"],
 ];
 
-/** Parse a money phrase into a plain number of Naira. */
+/**
+ * Which currency the text is quoted in, from a symbol or an ISO code.
+ * Undefined when nothing indicates one; the caller then falls back to whatever
+ * the named market usually quotes.
+ */
+const CURRENCY_HINTS: Array<[RegExp, Currency]> = [
+  [/(eur|€|euros?)/i, "EUR"],
+  [/(gbp|£|pounds?|quid)/i, "GBP"],
+  [/(usd|dollars?|\$)/i, "USD"],
+  [/(ngn|₦|naira)/i, "NGN"],
+  [/(aed|dirhams?|dhs?)/i, "AED"],
+  [/(zar|rands?|r\d)/i, "ZAR"],
+  [/(kes|shillings?|ksh)/i, "KES"],
+  [/(sgd|s\$)/i, "SGD"],
+  [/(cad|c\$)/i, "CAD"],
+  [/(aud|a\$)/i, "AUD"],
+  [/(inr|₹|rupees?)/i, "INR"],
+  [/(mxn|pesos?)/i, "MXN"],
+  [/(brl|reais?)/i, "BRL"],
+  [/(jpy|¥|yen)/i, "JPY"],
+];
+
+function detectCurrency(text: string): Currency | undefined {
+  for (const [pattern, currency] of CURRENCY_HINTS) {
+    if (pattern.test(text)) return currency;
+  }
+  return undefined;
+}
+
+/** Parse a money phrase into a plain number, in whatever currency was meant. */
 export function parseMoney(text: string): number | undefined {
   // Matches: 8m, 8 million, ₦8.5m, N8,000,000, 800k, 750,000
   const pattern =
@@ -86,15 +130,28 @@ export function parseMoney(text: string): number | undefined {
   if (unit === "k" || unit === "thousand") return base * 1_000;
   if (unit && unit.startsWith("m")) return base * 1_000_000;
 
-  // No unit given. A bare small number in a rent context means millions:
-  // "under 8" is 8 million, not 8 Naira.
-  if (base < 1000) return base * 1_000_000;
+  // No magnitude word. A bare number is taken at face value: "under 1500" in
+  // Lisbon means 1500 euros, not 1.5 billion. Markets that quote in millions
+  // say so ("8 million"), and the caller can still supply an explicit figure.
   return base;
 }
 
-function detectRentPeriod(text: string): "monthly" | "yearly" {
-  if (/\b(per|a|\/)\s*month\b|\bmonthly\b|\bpm\b|\/mo\b/i.test(text)) return "monthly";
-  return "yearly";
+/**
+ * Whether the rent is quoted per month or per year.
+ *
+ * Markets disagree: most of Europe and North America quote a month, Dubai and
+ * Lagos quote a year. When the renter has not said, the market they named is a
+ * better guess than a global default, so the caller supplies one.
+ */
+function detectRentPeriod(
+  text: string,
+  fallback: "monthly" | "yearly" = "monthly",
+): "monthly" | "yearly" {
+  if (/\b(per|a|\/)\s*month\b|\bmonthly\b|\bpm\b|\/mo\b|\bpcm\b/i.test(text)) return "monthly";
+  if (/\b(per|a|\/)\s*(year|annum)\b|\byearly\b|\bannually\b|\bp\.?a\.?\b/i.test(text)) {
+    return "yearly";
+  }
+  return fallback;
 }
 
 function detectLocation(text: string): string | undefined {
@@ -223,6 +280,9 @@ export function extractRequirementWithRules(text: string): ParsedRequirement | n
   if (!location) return null;
 
   const budget = detectBudget(trimmed);
+  const market = marketDefaults(location);
+  const currency = detectCurrency(trimmed) ?? market?.currency;
+  const period = detectRentPeriod(trimmed, market?.period);
 
   const candidate = {
     location,
@@ -231,7 +291,8 @@ export function extractRequirementWithRules(text: string): ParsedRequirement | n
     bathrooms: detectBathrooms(trimmed),
     minRent: budget.minRent,
     maxRent: budget.maxRent,
-    rentPeriod: detectRentPeriod(trimmed),
+    currency,
+    rentPeriod: period,
     moveInDate: detectMoveIn(trimmed),
     amenities: detectAmenities(trimmed),
     additionalRequirements: detectAdditional(trimmed),
@@ -239,4 +300,21 @@ export function extractRequirementWithRules(text: string): ParsedRequirement | n
 
   const result = propertySearchRequirementSchema.safeParse(candidate);
   return result.success ? result.data : null;
+}
+
+/**
+ * Did the text state a rent period explicitly ("a month", "per annum")?
+ *
+ * Used to tell a renter's statement apart from a model's guess: when neither
+ * the renter nor the market is ambiguous, the market is better evidence.
+ */
+export function statesPeriodExplicitly(text: string): boolean {
+  return /(per|a|\/)\s*(month|year|annum)|monthly|yearly|annually|pcm|p\.?a\.?|\/mo/i.test(
+    text,
+  );
+}
+
+/** Did the text name a currency, by symbol, code or word? */
+export function statesCurrencyExplicitly(text: string): boolean {
+  return CURRENCY_HINTS.some(([pattern]) => pattern.test(text));
 }

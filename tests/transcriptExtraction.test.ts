@@ -29,6 +29,7 @@ const LISTING: PropertyListing = {
   bedrooms: 3,
   bathrooms: 3,
   rent: 7_500_000,
+  currency: "NGN",
   rentPeriod: "yearly",
   amenities: ["Parking", "Prepaid meter", "Security", "Generator", "Borehole"],
   verificationStatus: "unverified",

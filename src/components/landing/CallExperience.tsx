@@ -17,7 +17,7 @@ const CHECKS = [
   { label: "Availability", state: "done" },
   { label: "Annual rent", state: "done" },
   { label: "Parking", state: "active" },
-  { label: "Prepaid meter", state: "pending" },
+  { label: "Air conditioning", state: "pending" },
   { label: "Additional fees", state: "pending" },
 ] as const;
 
@@ -58,7 +58,7 @@ export function CallExperience() {
             <div className="flex items-center gap-8">
               <div>
                 <p className="type-info text-[9px] text-white/35">Property #04</p>
-                <p className="type-data mt-1 text-sm text-white">Lekki Phase 1</p>
+                <p className="type-data mt-1 text-sm text-white">Príncipe Real, Lisbon</p>
               </div>
               <p className="type-data text-2xl text-white">00:42</p>
             </div>

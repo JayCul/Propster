@@ -26,8 +26,8 @@ const STEPS: Step[] = [
   { text: "Shortlisting", detail: "6 candidates", tone: "done" },
   { text: "Investigating property #04", detail: "CALL-E connected", tone: "active" },
   { text: "Verifying availability", detail: "Confirmed", tone: "done" },
-  { text: "Verifying rent", detail: "₦7.5M / year", tone: "done" },
-  { text: "Checking additional fees", detail: "₦500K service charge discovered", tone: "found" },
+  { text: "Verifying rent", detail: "€1,650 / month", tone: "done" },
+  { text: "Checking additional fees", detail: "€3,300 deposit discovered", tone: "found" },
 ];
 
 export function LiveInvestigation() {

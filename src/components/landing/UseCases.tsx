@@ -59,7 +59,7 @@ export function UseCases() {
 
             <Reveal delay={200}>
               <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
-                {["3 bedroom", "Lekki", "≤ ₦8M", "Parking", "Prepaid"].map((chip) => (
+                {["2 bedroom", "Lisbon", "≤ €1,800", "Parking", "Air con"].map((chip) => (
                   <span key={chip} className="type-info text-[10px] text-void-900">
                     {chip}
                   </span>
@@ -176,7 +176,7 @@ export function UseCases() {
             <div className="flex items-baseline justify-between gap-8 pt-7">
               <span className="type-info text-[10px] text-void-900">Real cost</span>
               <span className="type-data text-4xl font-medium text-void-900 lg:text-7xl">
-                ₦9.5M
+                €25,000
               </span>
             </div>
           </Reveal>
@@ -193,8 +193,8 @@ export function UseCases() {
 }
 
 const COSTS = [
-  { label: "Rent", value: "₦7.5M", hidden: false },
-  { label: "Service charge", value: "+ ₦500K", hidden: true },
-  { label: "Agency fee", value: "+ ₦750K", hidden: true },
-  { label: "Legal fee", value: "+ ₦750K", hidden: true },
+  { label: "Rent, one year", value: "€19,800", hidden: false },
+  { label: "Deposit", value: "+ €3,300", hidden: true },
+  { label: "Agency fee", value: "+ €1,650", hidden: true },
+  { label: "Contract fee", value: "+ €250", hidden: true },
 ] as const;

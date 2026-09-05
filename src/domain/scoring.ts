@@ -1,5 +1,6 @@
 import { canonicalizeAmenities, amenityLabel, verifiedAmenityValue } from "./amenities";
-import { formatNaira, toAnnual } from "./discrepancy";
+import { toAnnual } from "./discrepancy";
+import { formatMoney } from "./money";
 import type {
   PropertyListing,
   PropertySearchRequirement,
@@ -97,11 +98,11 @@ export function scoreVerification(
       status,
       detail:
         status === "pass"
-          ? "Rent confirmed at " + formatNaira(verifiedAnnual) + "/year"
+          ? "Rent confirmed at " + formatMoney(verifiedAnnual, listing.currency) + "/year"
           : "Rent quoted at " +
-            formatNaira(verifiedAnnual) +
+            formatMoney(verifiedAnnual, listing.currency) +
             "/year, listing says " +
-            formatNaira(listedAnnual) +
+            formatMoney(listedAnnual, listing.currency) +
             "/year",
     });
   } else {

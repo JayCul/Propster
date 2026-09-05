@@ -101,7 +101,7 @@ export function TheProperty() {
             <div className="mx-auto flex max-w-[1600px] flex-wrap items-end justify-between gap-8">
               <div className="space-y-1">
                 <p className="type-info text-[9px] text-white/40">Advertised</p>
-                <p className="type-data text-lg text-white">₦7,500,000 / year</p>
+                <p className="type-data text-lg text-white">€1,650 / month</p>
               </div>
               <div className="space-y-1">
                 <p className="type-info text-[9px] text-white/40">Bedrooms</p>
@@ -109,7 +109,7 @@ export function TheProperty() {
               </div>
               <div className="space-y-1">
                 <p className="type-info text-[9px] text-white/40">Amenities</p>
-                <p className="type-data text-lg text-white">Parking · Prepaid</p>
+                <p className="type-data text-lg text-white">Parking · Air con</p>
               </div>
               <div className="space-y-1">
                 <p className="type-info text-[9px] text-white/40">Last updated</p>

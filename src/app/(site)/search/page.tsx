@@ -37,7 +37,7 @@ export default async function SearchPage({
           detail={
             claude
               ? "Natural language is parsed by Claude, then validated against a strict schema before use."
-              : "No Claude key configured, so the built-in rule parser handles natural language. It understands ₦, millions and 'k' notation."
+              : "No model key configured, so the built-in rule parser handles natural language. It reads currency symbols, millions and 'k' notation."
           }
           tone={claude ? "good" : "neutral"}
         />

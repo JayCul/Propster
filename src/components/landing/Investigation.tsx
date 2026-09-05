@@ -34,10 +34,10 @@ const STATES: State[] = [
     title: "Listing",
     caption: "What the advert claims.",
     rows: [
-      { label: "Annual rent", value: "₦7.5M" },
+      { label: "Monthly rent", value: "€1,650" },
       { label: "Availability", value: "Available" },
       { label: "Parking", value: "Included" },
-      { label: "Electricity", value: "Prepaid" },
+      { label: "Air conditioning", value: "Included" },
     ],
   },
   {
@@ -67,10 +67,10 @@ const STATES: State[] = [
     title: "Evidence",
     caption: "Each fact is recorded with its source.",
     rows: [
-      { label: "₦7.5M / year", value: "Confirmed", state: "confirmed" },
-      { label: "3 bedrooms", value: "Confirmed", state: "confirmed" },
+      { label: "€1,650 / month", value: "Confirmed", state: "confirmed" },
+      { label: "2 bedrooms", value: "Confirmed", state: "confirmed" },
       { label: "Parking", value: "Confirmed", state: "confirmed" },
-      { label: "Prepaid meter", value: "Confirmed", state: "confirmed" },
+      { label: "Air conditioning", value: "Confirmed", state: "confirmed" },
     ],
   },
   {
@@ -78,9 +78,9 @@ const STATES: State[] = [
     title: "Discovery",
     caption: "Something the listing never mentioned.",
     rows: [
-      { label: "Service charge", value: "₦500,000", state: "found" },
-      { label: "Agency fee", value: "₦750,000", state: "found" },
-      { label: "Legal fee", value: "₦750,000", state: "found" },
+      { label: "Deposit", value: "€3,300", state: "found" },
+      { label: "Agency fee", value: "€1,650", state: "found" },
+      { label: "Contract fee", value: "€250", state: "found" },
       { label: "In the listing", value: "None of it", state: "pending" },
     ],
   },
@@ -92,7 +92,7 @@ const STATES: State[] = [
       { label: "Verification score", value: "92 / 100", state: "confirmed" },
       { label: "Facts confirmed", value: "8", state: "confirmed" },
       { label: "Discrepancies", value: "1", state: "found" },
-      { label: "Real annual cost", value: "₦9.5M", state: "found" },
+      { label: "Real first-year cost", value: "€25,000", state: "found" },
     ],
   },
 ];
@@ -139,7 +139,7 @@ export function Investigation() {
 
               <div className="absolute bottom-5 left-5">
                 <p className="type-info text-[9px] text-white/45">Under investigation</p>
-                <p className="type-data mt-1 text-sm text-white">Property #04 · Lekki Phase 1</p>
+                <p className="type-data mt-1 text-sm text-white">Property #04 · Príncipe Real, Lisbon</p>
               </div>
 
               {step >= 1 && step <= 2 ? (

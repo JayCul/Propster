@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CURRENCIES, DEFAULT_CURRENCY } from "./money";
 
 /**
  * Every boundary where untrusted data enters Propster is validated here:
@@ -18,6 +19,7 @@ export const propertySearchRequirementSchema = z.object({
   bathrooms: z.number().int().min(0).max(20).optional(),
   minRent: z.number().min(0).max(10_000_000_000).optional(),
   maxRent: z.number().min(0).max(10_000_000_000).optional(),
+  currency: z.enum(CURRENCIES).default(DEFAULT_CURRENCY),
   rentPeriod: rentPeriodSchema.default("yearly"),
   moveInDate: trimmedString.max(60).optional(),
   amenities: z.array(trimmedString.min(1).max(60)).max(30).default([]),
@@ -101,7 +103,8 @@ export function buildCallResultJsonSchema(): Record<string, unknown> {
           "Is the advertised property still available to rent? null if the contact would not say.",
       }),
       current_rent: nullable("number", {
-        description: "Current asking rent as a plain number in Naira, e.g. 7500000. null if not stated.",
+        description:
+          "Current asking rent as a plain number in the listing's own currency, e.g. 1650 or 7500000. Do not convert currencies. null if not stated.",
       }),
       rent_period: {
         type: ["string", "null"],
@@ -110,14 +113,24 @@ export function buildCallResultJsonSchema(): Record<string, unknown> {
       },
       bedrooms: nullable("integer", { description: "Confirmed number of bedrooms." }),
       bathrooms: nullable("integer", { description: "Confirmed number of bathrooms." }),
-      service_charge: nullable("number", { description: "Annual service charge in Naira." }),
-      agency_fee: nullable("number", { description: "Agency fee in Naira." }),
-      legal_fee: nullable("number", { description: "Legal or agreement fee in Naira." }),
-      caution_fee: nullable("number", { description: "Refundable caution or damage deposit in Naira." }),
+      service_charge: nullable("number", {
+        description: "Service or maintenance charge, in the listing's currency.",
+      }),
+      agency_fee: nullable("number", {
+        description: "Agency or letting fee, in the listing's currency.",
+      }),
+      legal_fee: nullable("number", {
+        description: "Legal, contract or admin fee, in the listing's currency.",
+      }),
+      caution_fee: nullable("number", {
+        description: "Refundable deposit or bond, in the listing's currency.",
+      }),
       electricity_type: nullable("string", {
         description: "How electricity is billed, e.g. 'prepaid meter', 'postpaid', 'estate billing'.",
       }),
-      water_supply: nullable("string", { description: "Water source, e.g. 'borehole', 'public mains'." }),
+      water_supply: nullable("string", {
+        description: "Water supply, e.g. 'mains', 'borehole', 'included in rent'.",
+      }),
       parking_available: nullable("boolean", { description: "Is dedicated parking included?" }),
       security_available: nullable("boolean", { description: "Is there estate or on-site security?" }),
       generator_available: nullable("boolean", { description: "Is there a backup generator?" }),
@@ -126,7 +139,9 @@ export function buildCallResultJsonSchema(): Record<string, unknown> {
       furnished: nullable("boolean", { description: "Is the property furnished?" }),
       pets_allowed: nullable("boolean", { description: "Are pets permitted?" }),
       viewing_available: nullable("boolean", { description: "Can the property be viewed?" }),
-      viewing_fee: nullable("number", { description: "Inspection fee in Naira, 0 if free." }),
+      viewing_fee: nullable("number", {
+        description: "Viewing or inspection fee, in the listing's currency. 0 if free.",
+      }),
       earliest_move_in: nullable("string", {
         description: "Earliest move-in described in the contact's own words, e.g. 'immediately', 'mid October'.",
       }),
@@ -167,31 +182,23 @@ export const testPropertySchema = z.object({
   title: trimmedString.min(3).max(120),
   description: trimmedString.max(600).optional(),
   area: trimmedString.min(2).max(80),
+  country: trimmedString.min(2).max(80).optional(),
   propertyType: trimmedString.min(2).max(40),
   bedrooms: z.number().int().min(0).max(20),
   bathrooms: z.number().int().min(0).max(20).optional(),
-  rent: z.number().min(1000).max(10_000_000_000),
+  rent: z.number().min(1).max(10_000_000_000),
+  currency: z.enum(CURRENCIES).default(DEFAULT_CURRENCY),
   rentPeriod: rentPeriodSchema,
   amenities: z.array(trimmedString.min(1).max(60)).max(20).default([]),
   agentName: trimmedString.min(2).max(80).optional(),
-  /** E.164, e.g. +2348012345678. */
+  /** E.164, e.g. +351912345678. */
   agentPhone: z
     .string()
     .trim()
-    .regex(/^\+[1-9]\d{7,14}$/, "Enter the number in international format, e.g. +2348012345678."),
+    .regex(/^\+[1-9]\d{7,14}$/, "Enter the number in international format, starting with your country code."),
   /** Must be true. The submitter asserts the number is theirs. */
   consent: z.boolean(),
 });
 
 export type TestPropertyInput = z.infer<typeof testPropertySchema>;
 
-/**
- * The fictional phone range used by the seeded demo corpus.
- *
- * `prisma/seed-data.ts` builds these as "+23470000000" followed by a
- * zero-padded two-digit index, giving 13 digits after the "+". Nothing may
- * submit one of these through /try, or a fabricated listing could be used to
- * dial whoever happens to own that number. `tests/seedData.test.ts` asserts the
- * generator and this pattern agree.
- */
-export const RESERVED_DEMO_PHONE = /^\+23470000000\d{2}$/;

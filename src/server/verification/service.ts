@@ -4,9 +4,10 @@ import type { Property, PropertyVerification as VerificationRow } from "@prisma/
 import {
   callVerificationResultSchema,
   buildCallResultJsonSchema,
-  RESERVED_DEMO_PHONE,
   type CallVerificationResult,
 } from "@/domain/schemas";
+import { isReservedDemoPhone } from "@/domain/phone";
+import { asCurrency, DEFAULT_CURRENCY } from "@/domain/money";
 import { detectDiscrepancies, hasHighSeverity } from "@/domain/discrepancy";
 import { scoreVerification } from "@/domain/scoring";
 import {
@@ -102,7 +103,7 @@ function mockProvider(): MockPhoneVerificationProvider {
  * without turning the public demo into a dead end.
  */
 function providerForPhone(phone: string): PhoneVerificationProvider {
-  if (RESERVED_DEMO_PHONE.test(phone)) {
+  if (isReservedDemoPhone(phone)) {
     return mockProvider();
   }
   return getPhoneProvider();
@@ -496,6 +497,7 @@ export async function applyCallResult(
         status: nextStatus,
         available: full.available,
         currentRent: full.currentRent ?? null,
+        currency: full.currency ?? null,
         rentPeriod: full.rentPeriod ?? null,
         bedrooms: full.bedrooms ?? null,
         bathrooms: full.bathrooms ?? null,
@@ -726,7 +728,13 @@ async function requirementForSearch(searchId: string): Promise<PropertySearchReq
   if (!search) {
     // A verification whose search has been pruned still needs criteria to
     // score against; fall back to an empty requirement rather than throwing.
-    return { location: "", rentPeriod: "yearly", amenities: [], additionalRequirements: [] };
+    return {
+      location: "",
+      currency: DEFAULT_CURRENCY,
+      rentPeriod: "yearly",
+      amenities: [],
+      additionalRequirements: [],
+    };
   }
   return {
     location: search.location,
@@ -735,6 +743,7 @@ async function requirementForSearch(searchId: string): Promise<PropertySearchReq
     bathrooms: search.bathrooms ?? undefined,
     minRent: search.minRent ?? undefined,
     maxRent: search.maxRent ?? undefined,
+    currency: asCurrency(search.currency),
     rentPeriod: search.rentPeriod === "monthly" ? "monthly" : "yearly",
     moveInDate: search.moveInDate ?? undefined,
     amenities: safeParseArray(search.amenities),

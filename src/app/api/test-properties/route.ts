@@ -1,4 +1,6 @@
-import { RESERVED_DEMO_PHONE, testPropertySchema } from "@/domain/schemas";
+import { testPropertySchema } from "@/domain/schemas";
+import { isReservedDemoPhone } from "@/domain/phone";
+import { marketDefaults } from "@/domain/money";
 import { prisma } from "@/server/db";
 import { ApiError, handleRoute, jsonOk, parseJsonBody } from "@/server/http";
 import { logger } from "@/server/logger";
@@ -43,10 +45,10 @@ export async function POST(request: Request) {
 
     // The seeded demo numbers are fictional. Refusing them here stops someone
     // resurrecting a fake listing through this form to dial a stranger.
-    if (RESERVED_DEMO_PHONE.test(body.agentPhone)) {
+    if (isReservedDemoPhone(body.agentPhone)) {
       throw ApiError.badRequest(
         "Reserved demo number",
-        "That number belongs to the fictional demo data. Use your own number.",
+        "That number is from a range reserved for fiction and cannot be called. Use your own number.",
       );
     }
 
@@ -56,14 +58,16 @@ export async function POST(request: Request) {
         description:
           body.description ??
           "Submitted for a live verification test. Propster will call the number given and ask about this listing.",
-        location: body.area + ", Lagos",
+        location: body.country ? body.area + ", " + body.country : body.area,
         area: body.area,
         propertyType: body.propertyType,
         bedrooms: body.bedrooms,
         bathrooms: body.bathrooms ?? null,
         rent: body.rent,
+        currency: body.currency,
         rentPeriod: body.rentPeriod,
         amenities: JSON.stringify(body.amenities),
+        country: body.country ?? null,
         imageUrl: "/img/property-04.webp",
         agentName: body.agentName ?? "Test contact",
         agentPhone: body.agentPhone,
@@ -89,6 +93,7 @@ export async function POST(request: Request) {
         bedrooms: body.bedrooms,
         bathrooms: body.bathrooms ?? null,
         maxRent: body.rent,
+        currency: body.currency,
         rentPeriod: body.rentPeriod,
         amenities: JSON.stringify(body.amenities),
         additionalRequirements: JSON.stringify([]),
@@ -101,6 +106,7 @@ export async function POST(request: Request) {
       propertyType: body.propertyType,
       bedrooms: body.bedrooms,
       maxRent: body.rent,
+      currency: body.currency,
       rentPeriod: body.rentPeriod,
       amenities: body.amenities,
       additionalRequirements: [],

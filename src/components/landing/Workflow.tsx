@@ -26,7 +26,7 @@ const STAGES: Stage[] = [
     title: "Search",
     artefact: {
       kind: "text",
-      body: ["“3 bedroom in Lekki", "under ₦8M with parking", "and a prepaid meter”"],
+      body: ["“2 bedroom in Lisbon", "under €1,800 with parking", "and air conditioning”"],
     },
   },
   {
@@ -50,7 +50,7 @@ const STAGES: Stage[] = [
   {
     index: "05",
     title: "Compare",
-    artefact: { kind: "rows", body: ["Listed ₦7.5M", "Confirmed ₦7.5M", "+ ₦500K service"] },
+    artefact: { kind: "rows", body: ["Listed €1,650", "Confirmed €1,650", "+ €3,300 deposit"] },
   },
   {
     index: "06",

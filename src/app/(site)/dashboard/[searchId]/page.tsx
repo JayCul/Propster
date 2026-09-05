@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Card, SectionTitle, cn } from "@/components/ui";
-import { formatNaira, toAnnual } from "@/domain/discrepancy";
+import { toAnnual } from "@/domain/discrepancy";
+import { formatMoney } from "@/domain/money";
 import { ApiError } from "@/server/http";
 import { getDashboard, type DashboardView } from "@/server/readModel";
 import { usingRealCalle } from "@/server/env";
@@ -72,7 +73,9 @@ export default async function DashboardPage({
             <Chip
               label="Max rent"
               value={
-                formatNaira(toAnnual(requirement.maxRent, requirement.rentPeriod)) + " / year"
+                formatMoney(requirement.maxRent, requirement.currency) +
+                " / " +
+                (requirement.rentPeriod === "monthly" ? "month" : "year")
               }
             />
           ) : null}

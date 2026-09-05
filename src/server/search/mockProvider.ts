@@ -3,6 +3,7 @@ import "server-only";
 import type { Property } from "@prisma/client";
 import { prisma } from "../db";
 import { toAnnual } from "@/domain/discrepancy";
+import { asCurrency } from "@/domain/money";
 import type {
   PropertyListing,
   PropertySearchRequirement,
@@ -19,7 +20,7 @@ import type { PropertySearchProvider } from "./provider";
  * honest "over budget" note.
  */
 export class MockPropertySearchProvider implements PropertySearchProvider {
-  readonly name = "seeded-lagos-corpus";
+  readonly name = "seeded-demo-corpus";
 
   async search(requirements: PropertySearchRequirement): Promise<PropertyListing[]> {
     const rows = await prisma.property.findMany({ orderBy: { rent: "asc" } });
@@ -96,10 +97,12 @@ export function toListing(row: Property): PropertyListing {
     description: row.description,
     location: row.location,
     area: row.area,
+    country: row.country ?? undefined,
     propertyType: row.propertyType,
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms ?? undefined,
     rent: row.rent,
+    currency: asCurrency(row.currency),
     rentPeriod: asRentPeriod(row.rentPeriod),
     amenities: parseStringArray(row.amenities),
     imageUrl: row.imageUrl ?? undefined,

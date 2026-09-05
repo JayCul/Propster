@@ -26,8 +26,8 @@ interface Fragment {
 
 const FRAGMENTS: Fragment[] = [
   {
-    field: "Annual rent",
-    value: "₦7,500,000",
+    field: "Monthly rent",
+    value: "€1,650",
     source: "Phone verification",
     confidence: "96% confidence",
     tone: "confirmed",
@@ -51,8 +51,8 @@ const FRAGMENTS: Fragment[] = [
     drift: true,
   },
   {
-    field: "Service charge",
-    value: "₦500,000",
+    field: "Deposit",
+    value: "€3,300",
     source: "Discovered during call",
     note: "Not present in the listing",
     tone: "found",
@@ -60,8 +60,8 @@ const FRAGMENTS: Fragment[] = [
     drift: true,
   },
   {
-    field: "Prepaid meter",
-    value: "Installed",
+    field: "Air conditioning",
+    value: "Both bedrooms",
     source: "Phone verification",
     tone: "confirmed",
     at: { top: "48%", right: "-2%" },
@@ -104,7 +104,7 @@ export function Evidence() {
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void-900/80 to-transparent p-5">
                     <p className="type-info text-[9px] text-white/60">Property #04</p>
-                    <p className="type-data mt-1 text-sm text-white">Lekki Phase 1</p>
+                    <p className="type-data mt-1 text-sm text-white">Príncipe Real, Lisbon</p>
                   </div>
                 </div>
               </HoverLabel>

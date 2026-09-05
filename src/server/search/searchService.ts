@@ -43,6 +43,7 @@ export async function runSearch(
       bathrooms: requirement.bathrooms ?? null,
       minRent: requirement.minRent ?? null,
       maxRent: requirement.maxRent ?? null,
+      currency: requirement.currency,
       rentPeriod: requirement.rentPeriod,
       moveInDate: requirement.moveInDate ?? null,
       amenities: JSON.stringify(requirement.amenities),

@@ -19,6 +19,7 @@ const input = {
   demoScenario: "price_mismatch",
   demoContext: {
     rent: 6_800_000,
+    currency: "EUR",
     rentPeriod: "yearly" as const,
     bedrooms: 3,
     bathrooms: 3,

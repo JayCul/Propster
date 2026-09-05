@@ -14,6 +14,7 @@ import type {
 } from "@/domain/types";
 import { prisma } from "./db";
 import { ApiError } from "./http";
+import { asCurrency } from "@/domain/money";
 import { toListing, parseStringArray } from "./search/mockProvider";
 
 /**
@@ -288,6 +289,7 @@ type SearchRow = {
   bathrooms: number | null;
   minRent: number | null;
   maxRent: number | null;
+  currency: string;
   rentPeriod: string;
   moveInDate: string | null;
   amenities: string;
@@ -302,6 +304,7 @@ export function requirementOf(search: SearchRow): PropertySearchRequirement {
     bathrooms: search.bathrooms ?? undefined,
     minRent: search.minRent ?? undefined,
     maxRent: search.maxRent ?? undefined,
+    currency: asCurrency(search.currency),
     rentPeriod: search.rentPeriod === "monthly" ? "monthly" : "yearly",
     moveInDate: search.moveInDate ?? undefined,
     amenities: parseStringArray(search.amenities),

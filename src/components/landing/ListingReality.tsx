@@ -15,20 +15,20 @@ import { Reveal, useInView } from "./motion";
  */
 
 const CLAIMS = [
-  { label: "Annual rent", value: "₦7.5M" },
-  { label: "Bedrooms", value: "3" },
+  { label: "Monthly rent", value: "€1,650" },
+  { label: "Bedrooms", value: "2" },
   { label: "Parking", value: "Included" },
-  { label: "Electricity", value: "Prepaid" },
+  { label: "Air conditioning", value: "Included" },
 ] as const;
 
 const VERIFIED = [
-  { label: "Annual rent", value: "₦7.5M", tone: "confirmed" },
-  { label: "Bedrooms", value: "3", tone: "confirmed" },
+  { label: "Monthly rent", value: "€1,650", tone: "confirmed" },
+  { label: "Bedrooms", value: "2", tone: "confirmed" },
   { label: "Parking", value: "Dedicated bay", tone: "confirmed" },
-  { label: "Electricity", value: "Prepaid meter", tone: "confirmed" },
-  { label: "Service charge", value: "₦500,000", tone: "found" },
-  { label: "Agency fee", value: "₦750,000", tone: "found" },
-  { label: "Legal fee", value: "₦750,000", tone: "found" },
+  { label: "Air conditioning", value: "In both rooms", tone: "confirmed" },
+  { label: "Deposit", value: "€3,300", tone: "found" },
+  { label: "Agency fee", value: "€1,650", tone: "found" },
+  { label: "Contract fee", value: "€250", tone: "found" },
 ] as const;
 
 export function ListingReality() {
@@ -136,8 +136,8 @@ export function ListingReality() {
                 transitionDelay: "1180ms",
               }}
             >
-              <span className="type-info text-[10px] text-void-900">Real annual cost</span>
-              <span className="type-data text-3xl font-medium text-void-900">₦9.5M</span>
+              <span className="type-info text-[10px] text-void-900">Real first-year cost</span>
+              <span className="type-data text-3xl font-medium text-void-900">€25,000</span>
             </div>
           </div>
         </div>

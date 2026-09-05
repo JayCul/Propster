@@ -1,5 +1,6 @@
 import { canonicalizeAmenities, amenityLabel } from "@/domain/amenities";
-import { formatNaira, toAnnual } from "@/domain/discrepancy";
+import { toAnnual } from "@/domain/discrepancy";
+import { formatMoney } from "@/domain/money";
 import type { PropertyListing, PropertySearchRequirement } from "@/domain/types";
 
 /**
@@ -27,7 +28,7 @@ export function buildCallObjective(
 
   const questions: string[] = [
     "Is the property still available to rent?",
-    "What is the current asking rent, and is that per year or per month?",
+    "What is the current asking rent, and is that per month or per year?",
     "How many bedrooms and bathrooms does it have?",
   ];
 
@@ -36,7 +37,7 @@ export function buildCallObjective(
   }
 
   questions.push(
-    "What are the other upfront costs: service charge, agency fee, legal or agreement fee, and caution deposit?",
+    "What are the other upfront costs, such as agency or letting fees, a deposit, service or maintenance charges, and any legal or contract fee?",
     "How soon could a tenant move in?",
     "Can the property be inspected, and is there an inspection fee?",
   );
@@ -55,7 +56,7 @@ export function buildCallObjective(
   const budgetLine =
     requirement.maxRent !== undefined
       ? "The caller's ceiling is " +
-        formatNaira(toAnnual(requirement.maxRent, requirement.rentPeriod)) +
+        formatMoney(toAnnual(requirement.maxRent, requirement.rentPeriod), requirement.currency) +
         " per year, but do not reveal the budget or negotiate on price."
       : "Do not negotiate on price.";
 
@@ -74,7 +75,7 @@ export function buildCallObjective(
   // is stated once, in the fewest words that still bind it. Nothing about the
   // agent's obligations has been dropped — only the padding around them.
   const task = [
-    "Call a Lagos property agent to verify a rental listing for a prospective tenant.",
+    "Call a letting agent to verify a rental listing for a prospective tenant.",
     "",
     "RULES (absolute):",
     "- Open by saying you are an AI assistant calling for a prospective tenant. Never imply you are human.",
@@ -84,8 +85,9 @@ export function buildCallObjective(
     "- If they decline or ask you to call back, thank them and end the call.",
     "",
     "LISTING UNDER TEST:",
-    '"' + listing.title + '", ' + listing.location + ".",
-    formatNaira(listedAnnual) +
+    '"' + listing.title + '", ' + listing.location +
+      (listing.country ? ", " + listing.country : "") + ".",
+    formatMoney(listedAnnual, listing.currency) +
       "/year, " +
       listing.bedrooms +
       " bed" +
@@ -120,13 +122,23 @@ function amenityQuestion(key: string): string {
     case "parking":
       return "Is there dedicated parking, and how many cars?";
     case "prepaid_meter":
-      return "How is electricity billed: is there a prepaid meter, or is it estate or postpaid billing?";
+      return "How is electricity billed: is there a prepaid or prepayment meter, or is it billed in arrears?";
     case "security":
-      return "Is there security on site, and is the compound gated?";
-    case "generator":
-      return "Is there a backup generator, and roughly how many hours does it run?";
-    case "borehole":
-      return "What is the water supply: borehole, or public mains?";
+      return "Is there security on site, and is the building or compound secured?";
+    case "backup_power":
+      return "Is there backup power for outages, such as a generator or inverter?";
+    case "water":
+      return "What is the water supply, and is water included in the rent?";
+    case "heating":
+      return "How is the property heated, and is heating included in the rent?";
+    case "balcony":
+      return "Is there a balcony, terrace or outdoor space?";
+    case "laundry":
+      return "Is there a washing machine in the unit, or shared laundry?";
+    case "dishwasher":
+      return "Is there a dishwasher?";
+    case "concierge":
+      return "Is there a concierge or building manager, and what does the service charge cover?";
     case "internet":
       return "Is fibre or broadband internet available at the property?";
     case "air_conditioning":
@@ -141,8 +153,6 @@ function amenityQuestion(key: string): string {
       return "Is there a swimming pool?";
     case "elevator":
       return "Is there a working lift?";
-    case "serviced":
-      return "Is the property serviced, and what does the service charge cover?";
     default:
       return "Can you confirm whether the property has " + key.replace(/_/g, " ") + "?";
   }

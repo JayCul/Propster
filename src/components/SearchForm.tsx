@@ -13,17 +13,19 @@ import { cn } from "./ui";
  */
 
 const DEMO_QUERY =
-  "I need a 3 bedroom apartment in Lekki under ₦8 million per year. I need parking, prepaid electricity and I want to move in this month.";
+  "I need a 2 bedroom apartment in Lisbon under €1,800 a month. I need parking and air conditioning, and I want to move in this month.";
 
 const AMENITY_OPTIONS = [
   "Parking",
-  "Prepaid meter",
-  "Security",
-  "Generator",
-  "Borehole",
-  "Internet",
   "Air conditioning",
+  "Heating",
+  "Elevator",
+  "Balcony",
   "Furnished",
+  "Laundry",
+  "Fibre internet",
+  "Security",
+  "Backup power",
   "Gym",
   "Swimming pool",
 ];
@@ -148,18 +150,18 @@ export function SearchForm({ prefillDemo = false }: { prefillDemo?: boolean }) {
               onClick={() => setNaturalLanguage(DEMO_QUERY)}
               className="rounded-lg border border-[var(--border-subtle)] bg-white px-2.5 py-1 text-xs text-ink-600 transition-colors hover:bg-ink-50"
             >
-              3 bed in Lekki under ₦8M with parking and prepaid
+              2 bed in Lisbon under €1,800 with parking
             </button>
             <button
               type="button"
               onClick={() =>
                 setNaturalLanguage(
-                  "2 bedroom flat in Yaba under 4 million a year, needs prepaid meter and good internet",
+                  "1 bed in East Austin under $2,300 a month, needs parking and in-unit laundry",
                 )
               }
               className="rounded-lg border border-[var(--border-subtle)] bg-white px-2.5 py-1 text-xs text-ink-600 transition-colors hover:bg-ink-50"
             >
-              2 bed in Yaba under ₦4M with internet
+              1 bed in Austin under $2,300 with parking
             </button>
           </div>
         </div>
@@ -169,7 +171,7 @@ export function SearchForm({ prefillDemo = false }: { prefillDemo?: boolean }) {
             <input
               value={location}
               onChange={(event) => setLocation(event.target.value)}
-              placeholder="Lekki"
+              placeholder="Lisbon, Austin, Berlin…"
               className={cn(inputClass, "w-full")}
             />
           </Field>
@@ -219,7 +221,7 @@ export function SearchForm({ prefillDemo = false }: { prefillDemo?: boolean }) {
             </select>
           </Field>
 
-          <Field label="Minimum rent (₦)">
+          <Field label="Minimum rent">
             <input
               value={minRent}
               onChange={(event) => setMinRent(event.target.value.replace(/[^\d]/g, ""))}
@@ -229,13 +231,13 @@ export function SearchForm({ prefillDemo = false }: { prefillDemo?: boolean }) {
             />
           </Field>
 
-          <Field label="Maximum rent (₦)">
+          <Field label="Maximum rent">
             <div className="flex gap-2">
               <input
                 value={maxRent}
                 onChange={(event) => setMaxRent(event.target.value.replace(/[^\d]/g, ""))}
                 inputMode="numeric"
-                placeholder="8000000"
+                placeholder="1800"
                 className={cn(inputClass, "tabular min-w-0 flex-1")}
               />
               <select
@@ -300,7 +302,7 @@ export function SearchForm({ prefillDemo = false }: { prefillDemo?: boolean }) {
                 value={additional}
                 onChange={(event) => setAdditional(event.target.value)}
                 rows={2}
-                placeholder={"Ground floor preferred\nNeeds a boys quarters"}
+                placeholder={"Ground floor preferred\nQuiet street"}
                 className={cn(inputClass, "w-full resize-none leading-relaxed")}
               />
             </Field>

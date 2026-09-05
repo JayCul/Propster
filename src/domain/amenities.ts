@@ -6,17 +6,21 @@
 
 export type AmenityKey =
   | "parking"
-  | "prepaid_meter"
-  | "security"
-  | "generator"
-  | "borehole"
-  | "internet"
   | "air_conditioning"
+  | "heating"
+  | "elevator"
+  | "balcony"
   | "furnished"
+  | "laundry"
+  | "dishwasher"
+  | "internet"
+  | "security"
+  | "backup_power"
+  | "water"
+  | "prepaid_meter"
   | "gym"
   | "pool"
-  | "elevator"
-  | "serviced"
+  | "concierge"
   | "pets";
 
 interface AmenityDefinition {
@@ -26,52 +30,97 @@ interface AmenityDefinition {
   synonyms: string[];
 }
 
+/**
+ * The vocabulary is deliberately international.
+ *
+ * Renters describe the same thing differently depending on where they are: a
+ * backup generator in Lagos, a load-shedding inverter in Cape Town and a
+ * standby supply in Mumbai are one amenity. A prepaid meter matters in some
+ * markets and is meaningless in others, so it stays in the list but is not
+ * treated as universal. Everything collapses onto one canonical key before
+ * anything is compared, because a discrepancy between "AC" and "air
+ * conditioning" is not a discrepancy.
+ */
 const DEFINITIONS: AmenityDefinition[] = [
   {
     key: "parking",
     label: "Parking",
-    synonyms: ["parking", "car park", "carport", "garage", "parking space"],
-  },
-  {
-    key: "prepaid_meter",
-    label: "Prepaid meter",
-    synonyms: ["prepaid", "pre-paid", "prepaid meter", "prepaid electricity", "meter"],
-  },
-  {
-    key: "security",
-    label: "Security",
-    synonyms: ["security", "gated", "guard", "cctv", "estate security"],
-  },
-  {
-    key: "generator",
-    label: "Generator",
-    synonyms: ["generator", "gen", "backup power", "power backup", "inverter"],
-  },
-  {
-    key: "borehole",
-    label: "Water / borehole",
-    synonyms: ["borehole", "water", "treated water", "water supply"],
-  },
-  {
-    key: "internet",
-    label: "Internet",
-    synonyms: ["internet", "fibre", "fiber", "broadband", "wifi", "wi-fi"],
+    synonyms: [
+      "parking",
+      "car park",
+      "carport",
+      "garage",
+      "parking space",
+      "parking bay",
+      "car park lot",
+      "off-street parking",
+    ],
   },
   {
     key: "air_conditioning",
     label: "Air conditioning",
-    synonyms: ["air conditioning", "air-conditioning", "ac", "a/c", "split unit"],
+    synonyms: ["air conditioning", "air-conditioning", "air con", "aircon", "ac", "a/c", "split unit", "chiller"],
   },
+  {
+    key: "heating",
+    label: "Heating",
+    synonyms: ["heating", "central heating", "gas heating", "radiator", "boiler", "underfloor"],
+  },
+  { key: "elevator", label: "Elevator", synonyms: ["elevator", "lift"] },
+  { key: "balcony", label: "Balcony", synonyms: ["balcony", "terrace", "patio", "roof terrace"] },
   {
     key: "furnished",
     label: "Furnished",
-    synonyms: ["furnished", "fully furnished", "semi furnished"],
+    synonyms: ["furnished", "fully furnished", "semi furnished", "part furnished"],
   },
-  { key: "gym", label: "Gym", synonyms: ["gym", "fitness"] },
+  {
+    key: "laundry",
+    label: "Laundry",
+    synonyms: ["laundry", "washer", "washing machine", "in-unit laundry", "dryer"],
+  },
+  { key: "dishwasher", label: "Dishwasher", synonyms: ["dishwasher"] },
+  {
+    key: "internet",
+    label: "Fibre internet",
+    synonyms: ["internet", "fibre", "fiber", "broadband", "wifi", "wi-fi"],
+  },
+  {
+    key: "security",
+    label: "Security",
+    synonyms: ["security", "gated", "guard", "cctv", "estate security", "doorman", "secure entry"],
+  },
+  {
+    key: "backup_power",
+    label: "Backup power",
+    synonyms: [
+      "backup power",
+      "back-up power",
+      "generator",
+      "standby generator",
+      "inverter",
+      "power backup",
+      "load shedding",
+      "ups",
+    ],
+  },
+  {
+    key: "water",
+    label: "Water supply",
+    synonyms: ["borehole", "water supply", "treated water", "well", "water tank"],
+  },
+  {
+    key: "prepaid_meter",
+    label: "Prepaid meter",
+    synonyms: ["prepaid", "pre-paid", "prepaid meter", "prepaid electricity", "prepayment meter"],
+  },
+  { key: "gym", label: "Gym", synonyms: ["gym", "fitness", "fitness centre", "fitness center"] },
   { key: "pool", label: "Swimming pool", synonyms: ["pool", "swimming"] },
-  { key: "elevator", label: "Elevator", synonyms: ["elevator", "lift"] },
-  { key: "serviced", label: "Serviced", synonyms: ["serviced", "service charge included"] },
-  { key: "pets", label: "Pets allowed", synonyms: ["pet", "pets", "dog", "cat"] },
+  {
+    key: "concierge",
+    label: "Concierge",
+    synonyms: ["concierge", "serviced", "facility management", "porter", "front desk"],
+  },
+  { key: "pets", label: "Pets allowed", synonyms: ["pet", "pets", "dog", "cat", "pet friendly"] },
 ];
 
 const BY_KEY = new Map(DEFINITIONS.map((d) => [d.key, d]));
@@ -131,7 +180,7 @@ export function verifiedAmenityValue(
       return verified.parkingAvailable;
     case "security":
       return verified.securityAvailable;
-    case "generator":
+    case "backup_power":
       return verified.generatorAvailable;
     case "internet":
       return verified.internetAvailable;
@@ -143,12 +192,13 @@ export function verifiedAmenityValue(
       return verified.petsAllowed;
     case "prepaid_meter":
       if (verified.electricityType === undefined) return undefined;
-      return /prepaid|pre-paid|pre paid/i.test(verified.electricityType);
-    case "borehole":
+      return /prepaid|pre-paid|pre paid|prepayment/i.test(verified.electricityType);
+    case "water":
       if (verified.waterSupply === undefined) return undefined;
       return verified.waterSupply.trim().length > 0;
     default:
-      // Amenities the call script does not probe (gym, pool, lift, serviced).
+      // Amenities the call script does not probe. Unknown is not the same as
+      // absent, and the score treats them differently.
       return undefined;
   }
 }

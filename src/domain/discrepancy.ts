@@ -1,4 +1,5 @@
 import { canonicalizeAmenities, amenityLabel, verifiedAmenityValue } from "./amenities";
+import { formatMoney, type Currency } from "./money";
 import type {
   PropertyDiscrepancy,
   PropertyListing,
@@ -16,22 +17,13 @@ export function toAnnual(amount: number, period: "monthly" | "yearly"): number {
   return period === "monthly" ? amount * 12 : amount;
 }
 
-export function formatNaira(amount: number): string {
-  if (amount >= 1_000_000) {
-    const millions = amount / 1_000_000;
-    const rendered = Number.isInteger(millions) ? millions.toFixed(0) : millions.toFixed(1);
-    return `₦${rendered}M`;
-  }
-  if (amount >= 1_000) return `₦${(amount / 1_000).toFixed(0)}k`;
-  return `₦${amount.toLocaleString("en-NG")}`;
-}
-
 /** Rent gaps under this fraction are treated as rounding, not a mismatch. */
 const RENT_TOLERANCE = 0.02;
 
 export interface VerificationFacts {
   available: boolean;
   currentRent?: number;
+  currency?: Currency;
   rentPeriod?: "monthly" | "yearly";
   bedrooms?: number;
   bathrooms?: number;
@@ -58,6 +50,8 @@ export function detectDiscrepancies(
   facts: VerificationFacts,
 ): PropertyDiscrepancy[] {
   const discrepancies: PropertyDiscrepancy[] = [];
+  // Rent is only ever compared within one currency; see domain/money.ts.
+  const money = (amount: number) => formatMoney(amount, listing.currency);
 
   if (!facts.available) {
     discrepancies.push({
@@ -82,10 +76,12 @@ export function detectDiscrepancies(
       const severity = relative > 0.15 ? "high" : relative > 0.05 ? "medium" : "low";
       discrepancies.push({
         field: "rent",
-        listedValue: `${formatNaira(listedAnnual)}/year`,
-        verifiedValue: `${formatNaira(verifiedAnnual)}/year`,
+        listedValue: money(listedAnnual) + "/year",
+        verifiedValue: money(verifiedAnnual) + "/year",
         severity,
-        explanation: `Confirmed rent is ${Math.round(relative * 100)}% ${direction} than the listing (${formatNaira(Math.abs(delta))}/year difference).`,
+        explanation:
+          "Confirmed rent is " + Math.round(relative * 100) + "% " + direction +
+          " than the listing (" + money(Math.abs(delta)) + "/year difference).",
       });
     }
 

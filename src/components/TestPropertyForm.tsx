@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Spinner } from "./SearchForm";
 import { cn } from "./ui";
+import { CURRENCIES, currencySymbol, marketDefaults } from "@/domain/money";
 
 /**
  * Lets a visitor describe a property and give their own number, so Propster
@@ -16,13 +17,13 @@ import { cn } from "./ui";
 
 const AMENITIES = [
   "Parking",
-  "Prepaid meter",
-  "Security",
-  "Generator",
-  "Borehole",
-  "Internet",
   "Air conditioning",
+  "Heating",
+  "Elevator",
+  "Balcony",
   "Furnished",
+  "Fibre internet",
+  "Security",
 ];
 
 const inputClass =
@@ -31,20 +32,37 @@ const inputClass =
 export function TestPropertyForm({ live }: { live: boolean }) {
   const router = useRouter();
 
-  const [title, setTitle] = useState("3 Bedroom Apartment, Lekki Phase 1");
-  const [area, setArea] = useState("Lekki Phase 1");
+  const [title, setTitle] = useState("2 Bedroom Apartment, Príncipe Real");
+  const [area, setArea] = useState("Lisbon");
   const [propertyType, setPropertyType] = useState("apartment");
-  const [bedrooms, setBedrooms] = useState("3");
-  const [bathrooms, setBathrooms] = useState("3");
-  const [rent, setRent] = useState("7500000");
-  const [rentPeriod, setRentPeriod] = useState<"yearly" | "monthly">("yearly");
-  const [amenities, setAmenities] = useState<string[]>(["Parking", "Prepaid meter"]);
+  const [bedrooms, setBedrooms] = useState("2");
+  const [bathrooms, setBathrooms] = useState("2");
+  const [rent, setRent] = useState("1650");
+  const [rentPeriod, setRentPeriod] = useState<"yearly" | "monthly">("monthly");
+  const [currency, setCurrency] = useState("EUR");
+  const [amenities, setAmenities] = useState<string[]>(["Parking", "Air conditioning"]);
   const [agentName, setAgentName] = useState("");
-  const [agentPhone, setAgentPhone] = useState("+234");
+  const [agentPhone, setAgentPhone] = useState("+");
   const [consent, setConsent] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Follow the market when the area changes, so someone testing a London flat
+   * is not quoting euros by accident. Only the untouched defaults move; once
+   * the visitor picks a currency themselves it is left alone.
+   */
+  const [currencyTouched, setCurrencyTouched] = useState(false);
+  const onAreaChange = (value: string) => {
+    setArea(value);
+    if (currencyTouched) return;
+    const market = marketDefaults(value);
+    if (market) {
+      setCurrency(market.currency);
+      setRentPeriod(market.period);
+    }
+  };
 
   const toggle = (value: string) =>
     setAmenities((current) =>
@@ -72,6 +90,7 @@ export function TestPropertyForm({ live }: { live: boolean }) {
           bedrooms: Number(bedrooms),
           bathrooms: bathrooms ? Number(bathrooms) : undefined,
           rent: Number(rent),
+          currency,
           rentPeriod,
           amenities,
           agentName: agentName.trim() || undefined,
@@ -113,8 +132,9 @@ export function TestPropertyForm({ live }: { live: boolean }) {
           <span className="block text-sm font-medium text-ink-800">Area</span>
           <input
             value={area}
-            onChange={(e) => setArea(e.target.value)}
+            onChange={(e) => onAreaChange(e.target.value)}
             required
+            placeholder="Lisbon, Austin, Berlin…"
             className={cn(inputClass, "mt-2 w-full")}
           />
         </label>
@@ -165,8 +185,23 @@ export function TestPropertyForm({ live }: { live: boolean }) {
         </label>
 
         <label className="block sm:col-span-2">
-          <span className="block text-sm font-medium text-ink-800">Advertised rent (₦)</span>
+          <span className="block text-sm font-medium text-ink-800">Advertised rent</span>
           <div className="mt-2 flex gap-2">
+            <select
+              value={currency}
+              onChange={(e) => {
+                setCurrency(e.target.value);
+                setCurrencyTouched(true);
+              }}
+              aria-label="Currency"
+              className={cn(inputClass, "w-28 shrink-0")}
+            >
+              {CURRENCIES.map((code) => (
+                <option key={code} value={code}>
+                  {currencySymbol(code)} {code}
+                </option>
+              ))}
+            </select>
             <input
               value={rent}
               onChange={(e) => setRent(e.target.value.replace(/[^\d]/g, ""))}
@@ -241,7 +276,7 @@ export function TestPropertyForm({ live }: { live: boolean }) {
             <input
               value={agentPhone}
               onChange={(e) => setAgentPhone(e.target.value.replace(/[^\d+]/g, ""))}
-              placeholder="+2348012345678"
+              placeholder="+351912345678"
               required
               inputMode="tel"
               className={cn(inputClass, "tabular mt-2 w-full")}

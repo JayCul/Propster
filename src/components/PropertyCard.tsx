@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { canonicalizeAmenities, amenityLabel } from "@/domain/amenities";
-import { formatNaira, toAnnual } from "@/domain/discrepancy";
+import { formatMoney } from "@/domain/money";
 import { responsiveSources, srcSetFor } from "@/domain/images";
 import type { PropertyDiscrepancy, PropertyListing, RequirementMatch } from "@/domain/types";
 import { Spinner } from "./SearchForm";
@@ -35,7 +35,7 @@ export function PropertyCard(props: PropertyCardProps) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const annual = toAnnual(listing.rent, listing.rentPeriod);
+  const perPeriod = listing.rentPeriod === "monthly" ? "month" : "year";
   const art = responsiveSources(listing.imageUrl);
   const required = new Set(canonicalizeAmenities(props.requiredAmenities));
   const listedAmenities = canonicalizeAmenities(listing.amenities);
@@ -131,9 +131,9 @@ export function PropertyCard(props: PropertyCardProps) {
 
         <div className="mt-3 flex items-baseline gap-2">
           <span className="tabular text-xl font-semibold tracking-[-0.02em] text-ink-900">
-            {formatNaira(annual)}
+            {formatMoney(listing.rent, listing.currency)}
           </span>
-          <span className="text-[13px] text-ink-500">/ year</span>
+          <span className="text-[13px] text-ink-500">/ {perPeriod}</span>
         </div>
 
         <div className="mt-2.5 flex items-center gap-4 text-[13px] text-ink-600">

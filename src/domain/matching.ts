@@ -1,5 +1,6 @@
 import { canonicalizeAmenities, amenityLabel } from "./amenities";
-import { formatNaira, toAnnual } from "./discrepancy";
+import { toAnnual } from "./discrepancy";
+import { formatMoney } from "./money";
 import type {
   PropertyListing,
   PropertySearchRequirement,
@@ -78,13 +79,18 @@ export function matchRequirements(
     const underFloor = minAnnual !== undefined && annual < minAnnual;
     if (!overBudget && !underFloor) {
       earned += MATCH_WEIGHTS.budget;
-      reasons.push("Within budget at " + formatNaira(annual) + "/year");
+      reasons.push("Within budget at " + formatMoney(annual, listing.currency) + "/year");
     } else if (overBudget && maxAnnual !== undefined) {
       const overshoot = (annual - maxAnnual) / maxAnnual;
       // A 10% overshoot still scores; beyond 40% it is out of the running.
       const ratio = Math.max(0, 1 - overshoot / 0.4);
       earned += MATCH_WEIGHTS.budget * ratio;
-      misses.push(formatNaira(annual) + "/year is over your " + formatNaira(maxAnnual) + " budget");
+      misses.push(
+        formatMoney(annual, listing.currency) +
+          "/year is over your " +
+          formatMoney(maxAnnual, listing.currency) +
+          " budget",
+      );
     } else {
       earned += MATCH_WEIGHTS.budget * 0.5;
       misses.push("Below your stated minimum rent");

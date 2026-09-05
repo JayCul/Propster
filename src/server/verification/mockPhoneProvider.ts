@@ -339,7 +339,7 @@ function buildScript(scenario: Scenario, context: DemoContext): Script {
   const baths = context.bathrooms ?? beds;
   const type = context.propertyType;
 
-  // Fees scale with the rent the way Nigerian lettings actually work: agency
+  // Fees scale with the rent, roughly the way lettings work in most markets:
   // and legal are each ten percent of the annual rent.
   const agency = Math.round(listed * 0.1);
   const legal = Math.round(listed * 0.1);

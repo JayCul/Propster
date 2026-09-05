@@ -14,11 +14,11 @@ const TRANSCRIPT = JSON.parse(
 const LISTING: PropertyListing = {
   id: "p1", title: "3 Bedroom Apartment with BQ", description: "",
   location: "Lekki Phase 1, Lagos", area: "Lekki Phase 1", propertyType: "apartment",
-  bedrooms: 3, bathrooms: 3, rent: 7_500_000, rentPeriod: "yearly",
+  bedrooms: 3, bathrooms: 3, rent: 7_500_000, currency: "NGN", rentPeriod: "yearly",
   amenities: ["Parking", "Prepaid meter", "Security"], verificationStatus: "unverified",
 };
 const REQUIREMENT: PropertySearchRequirement = {
-  location: "Lekki", bedrooms: 3, maxRent: 8_000_000, rentPeriod: "yearly",
+  location: "Lekki", bedrooms: 3, maxRent: 8_000_000, currency: "NGN", rentPeriod: "yearly",
   amenities: ["parking", "prepaid meter"], additionalRequirements: [],
 };
 

@@ -61,12 +61,12 @@ const FACTS = [
   {
     figure: "+32%",
     title: "Rent moves",
-    body: "The advert says ₦7.5M. The landlord raised it after the shoot.",
+    body: "The advert says €1,450. The landlord raised it after the photos.",
   },
   {
-    figure: "₦2M",
+    figure: "3x",
     title: "In fees",
-    body: "Service charge, agency, legal, caution. Rarely on the listing.",
+    body: "Deposit, agency, contract, service charge. Rarely on the listing.",
   },
   {
     figure: "0",

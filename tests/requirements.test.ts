@@ -14,8 +14,14 @@ describe("parseMoney", () => {
     expect(parseMoney("750,000")).toBe(750_000);
   });
 
-  it("treats a bare small number in a rent context as millions", () => {
-    expect(parseMoney("8")).toBe(8_000_000);
+  it("takes a bare number at face value rather than guessing millions", () => {
+    // An earlier, Lagos-only version read "under 8" as eight million, because
+    // that is what it meant in the one market the product supported. Globally
+    // that guess is wrong far more often than it is right: "under 1800" in
+    // Lisbon means 1800 euros. A magnitude word is now required to scale.
+    expect(parseMoney("8")).toBe(8);
+    expect(parseMoney("1800")).toBe(1800);
+    expect(parseMoney("8 million")).toBe(8_000_000);
   });
 
   it("returns undefined when there is no number", () => {
@@ -35,6 +41,7 @@ describe("extractRequirementWithRules", () => {
       propertyType: "apartment",
       bedrooms: 3,
       maxRent: 8_000_000,
+      currency: "NGN",
       rentPeriod: "yearly",
     });
     expect(result?.amenities).toContain("parking");
@@ -73,6 +80,31 @@ describe("extractRequirementWithRules", () => {
   it("prefers the most specific area name", () => {
     const result = extractRequirementWithRules("2 bedroom in Lekki Phase 1 under 6m");
     expect(result?.location).toBe("Lekki Phase 1");
+  });
+
+  it("follows the market for currency and rent period", () => {
+    const lisbon = extractRequirementWithRules("2 bedroom in Lisbon under 1800 a month");
+    expect(lisbon?.currency).toBe("EUR");
+    expect(lisbon?.rentPeriod).toBe("monthly");
+
+    // Dubai and Lagos quote a year; most other markets quote a month.
+    const dubai = extractRequirementWithRules("3 bedroom in Dubai under 150000");
+    expect(dubai?.currency).toBe("AED");
+    expect(dubai?.rentPeriod).toBe("yearly");
+
+    const lagos = extractRequirementWithRules("3 bedroom in Lekki under 8 million");
+    expect(lagos?.currency).toBe("NGN");
+    expect(lagos?.rentPeriod).toBe("yearly");
+
+    const austin = extractRequirementWithRules("1 bed in Austin under 2300 a month");
+    expect(austin?.currency).toBe("USD");
+    expect(austin?.rentPeriod).toBe("monthly");
+  });
+
+  it("reads an explicit currency symbol over the market default", () => {
+    // Someone searching Berlin in pounds means pounds.
+    const result = extractRequirementWithRules("2 bed in Berlin under £1,500 a month");
+    expect(result?.currency).toBe("GBP");
   });
 
   it("returns null when there is no recognisable location", () => {

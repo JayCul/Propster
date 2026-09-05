@@ -7,7 +7,12 @@ import {
   propertySearchRequirementSchema,
   type ParsedRequirement,
 } from "@/domain/schemas";
-import { extractRequirementWithRules } from "./ruleExtractor";
+import {
+  extractRequirementWithRules,
+  statesCurrencyExplicitly,
+  statesPeriodExplicitly,
+} from "./ruleExtractor";
+import { formatMoney, marketDefaults } from "@/domain/money";
 
 /**
  * Natural-language requirement extraction.
@@ -25,12 +30,18 @@ export interface ExtractionOutcome {
 
 const SYSTEM_PROMPT = [
   "You convert a renter's plain-English description into a structured property search requirement.",
-  "You are working in the Nigerian rental market. Rent is quoted in Naira and usually per year.",
+  "Renters may be searching in any country. Rent may be quoted per month or per year,",
+  "and in any currency.",
   "",
   "Rules:",
   "- Return ONLY a JSON object. No prose, no code fences.",
-  '- Money must be a plain number of Naira: "8 million" is 8000000, "800k" is 800000.',
-  '- rentPeriod is "yearly" unless the user clearly says per month.',
+  '- Money must be a plain number: "8 million" is 8000000, "800k" is 800000,',
+  '  "1,450" is 1450. Never convert between currencies.',
+  '- currency is the ISO 4217 code implied by the symbol or words the user used',
+  '  ($ USD, EUR, GBP, NGN, AED, ZAR, KES, SGD, CAD, AUD, INR, MXN, BRL, JPY).',
+  '  Omit it if no currency was indicated.',
+  '- rentPeriod: "monthly" when they say per month or the figure looks monthly',
+  '  for that market; "yearly" when they say per year. Prefer what they said.',
   "- Omit any field the user did not express. Never invent a budget, a bedroom count or an area.",
   '- amenities is a short list of lowercase phrases, e.g. ["parking", "prepaid meter", "security"].',
   "- additionalRequirements holds anything else material that is not a structured field.",
@@ -43,12 +54,47 @@ const SYSTEM_PROMPT = [
   '  "bathrooms"?: integer,',
   '  "minRent"?: number,',
   '  "maxRent"?: number,',
+  '  "currency"?: string,',
   '  "rentPeriod": "monthly" | "yearly",',
   '  "moveInDate"?: string,',
   '  "amenities": string[],',
   '  "additionalRequirements": string[]',
   "}",
 ].join("\n");
+
+
+/**
+ * Fill in what the market implies but the renter did not say.
+ *
+ * A language model is good at language and has no idea that Dubai quotes rent
+ * by the year in dirhams while Lisbon quotes by the month in euros. Asked for
+ * "3 bedroom in Dubai under 160000" it returns no currency, and the schema's
+ * default would silently make that US dollars — a 3.7x error in the budget the
+ * search is filtered on.
+ *
+ * Only genuinely absent fields are filled. A currency the renter stated, in
+ * words or as a symbol, always wins.
+ */
+function applyMarketConventions(candidate: unknown, rawText: string): unknown {
+  if (!candidate || typeof candidate !== "object") return candidate;
+  const record = { ...(candidate as Record<string, unknown>) };
+
+  const location = typeof record.location === "string" ? record.location : "";
+  const market = marketDefaults(location);
+  if (!market) return record;
+
+  // The market wins whenever the renter did not state one themselves. An
+  // absent value is obviously a gap, but so is a value the model supplied
+  // without evidence: asked for "3 bed in Lekki under 8 million" a model will
+  // confidently answer "monthly", when Lagos quotes by the year.
+  if (!statesCurrencyExplicitly(rawText)) {
+    record.currency = market.currency;
+  }
+  if (!statesPeriodExplicitly(rawText)) {
+    record.rentPeriod = market.period;
+  }
+  return record;
+}
 
 async function extractWithModel(text: string): Promise<ParsedRequirement | null> {
   const response = await completeJson({
@@ -60,7 +106,9 @@ async function extractWithModel(text: string): Promise<ParsedRequirement | null>
   const candidate = parseJsonObject(response);
   if (candidate === null) return null;
 
-  const result = propertySearchRequirementSchema.safeParse(candidate);
+  const result = propertySearchRequirementSchema.safeParse(
+    applyMarketConventions(candidate, text),
+  );
   if (!result.success) {
     logger.warn("extraction.model_schema_invalid", {
       provider: activeProvider(),
@@ -124,12 +172,12 @@ export function describeRequirement(requirement: ParsedRequirement): string {
   if (requirement.propertyType) parts.push(requirement.propertyType);
   parts.push(requirement.location);
   if (requirement.maxRent !== undefined) {
-    const millions = requirement.maxRent / 1_000_000;
-    const rendered =
-      requirement.maxRent >= 1_000_000
-        ? "₦" + (Number.isInteger(millions) ? millions.toFixed(0) : millions.toFixed(1)) + "M"
-        : "₦" + requirement.maxRent.toLocaleString("en-NG");
-    parts.push("under " + rendered + "/" + (requirement.rentPeriod === "monthly" ? "month" : "year"));
+    parts.push(
+      "under " +
+        formatMoney(requirement.maxRent, requirement.currency) +
+        "/" +
+        (requirement.rentPeriod === "monthly" ? "month" : "year"),
+    );
   }
   return parts.join(" • ");
 }

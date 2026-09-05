@@ -29,6 +29,7 @@ model Search {
   bathrooms              Int?
   minRent                Float?
   maxRent                Float?
+  currency               String   @default("USD")
   rentPeriod             String   @default("yearly")
   moveInDate             String?
   amenities              String   @default("[]") // JSON string array
@@ -48,10 +49,15 @@ model Property {
   description  String
   location     String
   area         String
+  country      String?
   propertyType String
   bedrooms     Int
   bathrooms    Int?
   rent         Float
+  /// ISO 4217. Rent is never converted between currencies anywhere in the
+  /// product: a listing, its verification and the budget it is judged against
+  /// all share one currency.
+  currency     String  @default("USD")
   rentPeriod   String  @default("yearly")
   amenities    String  @default("[]") // JSON string array
   imageUrl     String?
@@ -117,6 +123,7 @@ model PropertyVerification {
 
   available       Boolean?
   currentRent     Float?
+  currency        String?
   rentPeriod      String?
   bedrooms        Int?
   bathrooms       Int?

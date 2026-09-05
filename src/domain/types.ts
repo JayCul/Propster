@@ -7,7 +7,11 @@
  * be unit tested as pure functions.
  */
 
+import type { Currency } from "./money";
+
 export type RentPeriod = "monthly" | "yearly";
+
+export type { Currency };
 
 export type VerificationStatus =
   | "unverified"
@@ -37,6 +41,8 @@ export interface PropertySearchRequirement {
   bathrooms?: number;
   minRent?: number;
   maxRent?: number;
+  /** Rent is never converted; the budget shares the listing's currency. */
+  currency: Currency;
   rentPeriod: RentPeriod;
   moveInDate?: string;
   amenities: string[];
@@ -50,10 +56,12 @@ export interface PropertyListing {
   description: string;
   location: string;
   area: string;
+  country?: string;
   propertyType: string;
   bedrooms: number;
   bathrooms?: number;
   rent: number;
+  currency: Currency;
   rentPeriod: RentPeriod;
   amenities: string[];
   imageUrl?: string;
@@ -79,6 +87,7 @@ export interface PropertyDiscrepancy {
 export interface PropertyVerification {
   available: boolean;
   currentRent?: number;
+  currency?: Currency;
   rentPeriod?: RentPeriod;
   bedrooms?: number;
   bathrooms?: number;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RESERVED_DEMO_PHONE } from "@/domain/schemas";
+import { isReservedDemoPhone, reservedRangeAuthority } from "@/domain/phone";
 import { SEED_PROPERTIES } from "../prisma/seed-data";
 
 /**
@@ -13,7 +13,7 @@ import { SEED_PROPERTIES } from "../prisma/seed-data";
  */
 describe("provider routing by phone number", () => {
   it("classifies every fictional seeded number as simulate-only", () => {
-    const fictional = SEED_PROPERTIES.filter((p) => RESERVED_DEMO_PHONE.test(p.agentPhone));
+    const fictional = SEED_PROPERTIES.filter((p) => isReservedDemoPhone(p.agentPhone));
     // All but the one deliberately-real demo listing.
     expect(fictional.length).toBeGreaterThanOrEqual(SEED_PROPERTIES.length - 1);
   });
@@ -21,15 +21,15 @@ describe("provider routing by phone number", () => {
   it("does not classify an ordinary Nigerian mobile as fictional", () => {
     // Numbers a visitor would plausibly enter on /try. Both are fabricated for
     // this test: never put a real subscriber's number in the repository.
-    expect(RESERVED_DEMO_PHONE.test("+2348012345678")).toBe(false);
-    expect(RESERVED_DEMO_PHONE.test("+2349011122233")).toBe(false);
+    expect(isReservedDemoPhone("+2348012345678")).toBe(false);
+    expect(isReservedDemoPhone("+2349011122233")).toBe(false);
   });
 
   it("matches the whole reserved block and nothing adjacent to it", () => {
-    expect(RESERVED_DEMO_PHONE.test("+2347000000001")).toBe(true);
-    expect(RESERVED_DEMO_PHONE.test("+2347000000014")).toBe(true);
+    expect(isReservedDemoPhone("+2347000000001")).toBe(true);
+    expect(isReservedDemoPhone("+2347000000014")).toBe(true);
     // One digit longer or shorter must not be swept in.
-    expect(RESERVED_DEMO_PHONE.test("+23470000000011")).toBe(false);
-    expect(RESERVED_DEMO_PHONE.test("+234700000001")).toBe(false);
+    expect(isReservedDemoPhone("+23470000000011")).toBe(false);
+    expect(isReservedDemoPhone("+234700000001")).toBe(false);
   });
 });

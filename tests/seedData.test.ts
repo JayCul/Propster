@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SEED_PROPERTIES } from "../prisma/seed-data";
-import { RESERVED_DEMO_PHONE } from "@/domain/schemas";
+import { isReservedDemoPhone } from "@/domain/phone";
 
 /**
  * The /try endpoint refuses any number matching RESERVED_DEMO_PHONE, so that a
@@ -11,7 +11,7 @@ import { RESERVED_DEMO_PHONE } from "@/domain/schemas";
 describe("seeded demo phone numbers", () => {
   it("all fall inside the reserved range the /try guard blocks", () => {
     expect(SEED_PROPERTIES.length).toBeGreaterThan(0);
-    const real = SEED_PROPERTIES.filter((p) => !RESERVED_DEMO_PHONE.test(p.agentPhone));
+    const real = SEED_PROPERTIES.filter((p) => !isReservedDemoPhone(p.agentPhone));
     // A number outside the range is a real one deliberately added for live
     // testing; it must be the exception, not the rule.
     expect(real.length).toBeLessThanOrEqual(1);

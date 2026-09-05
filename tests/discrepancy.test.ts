@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { detectDiscrepancies, hasHighSeverity, toAnnual, formatNaira } from "@/domain/discrepancy";
+import { detectDiscrepancies, hasHighSeverity, toAnnual } from "@/domain/discrepancy";
+import { formatMoney } from "@/domain/money";
 import type { PropertyListing } from "@/domain/types";
 
 const listing: PropertyListing = {
@@ -12,6 +13,7 @@ const listing: PropertyListing = {
   bedrooms: 3,
   bathrooms: 3,
   rent: 7_500_000,
+  currency: "NGN",
   rentPeriod: "yearly",
   amenities: ["Parking", "Prepaid meter", "Security"],
   verificationStatus: "unverified",
@@ -24,11 +26,18 @@ describe("toAnnual", () => {
   });
 });
 
-describe("formatNaira", () => {
-  it("renders millions and thousands compactly", () => {
-    expect(formatNaira(7_500_000)).toBe("₦7.5M");
-    expect(formatNaira(9_000_000)).toBe("₦9M");
-    expect(formatNaira(750_000)).toBe("₦750k");
+describe("formatMoney", () => {
+  it("compacts millions, where compaction helps", () => {
+    expect(formatMoney(7_500_000, "NGN")).toBe("₦7.5M");
+    expect(formatMoney(9_000_000, "NGN")).toBe("₦9M");
+  });
+
+  it("writes smaller figures out in full, across currencies", () => {
+    // Compacting a European monthly rent to "€1.4k" loses precision renters
+    // care about, so figures below a million are never compacted.
+    expect(formatMoney(1_450, "EUR")).toBe("€1,450");
+    expect(formatMoney(2_400, "GBP")).toBe("£2,400");
+    expect(formatMoney(2_150, "USD")).toBe("$2,150");
   });
 });
 

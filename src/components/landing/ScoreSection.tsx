@@ -15,7 +15,7 @@ const COMPONENTS = [
   { label: "Availability", weight: 30, earned: 30, state: "Verified" },
   { label: "Rent", weight: 20, earned: 20, state: "Verified" },
   { label: "Parking", weight: 20, earned: 20, state: "Verified" },
-  { label: "Prepaid meter", weight: 15, earned: 15, state: "Verified" },
+  { label: "Air conditioning", weight: 15, earned: 15, state: "Verified" },
   { label: "Fees", weight: 10, earned: 5, state: "Partial" },
   { label: "Contact confidence", weight: 5, earned: 4, state: "Verified" },
 ] as const;
