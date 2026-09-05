@@ -80,7 +80,7 @@ export const ART = {
   listing: artwork("property-04", "", "Listing vs reality. The advertised photograph."),
 
   /** 09 — Use cases. */
-  useFind: artwork("lekki-bq", "", "Use case: find a home. Calm residential interior."),
+  useFind: artwork("flat-calm", "", "Use case: find a home. Calm residential interior."),
   useVerify: artwork(
     "use-verify",
     "",

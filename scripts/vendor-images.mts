@@ -49,21 +49,27 @@ const ASSETS: Asset[] = [
   { id: "1613490493576-7fde63acd811", name: "finale", role: "fullbleed", note: "Final CTA" },
   { id: "1600607687939-ce8a6c25118c", name: "use-verify", role: "panel", note: "Use case 02" },
 
-  // Property #04 appears on the landing page and is also a seeded listing.
+  // Property #04 is the landing page's worked example and also a seeded
+  // listing, so it appears in both.
   { id: "1512917774080-9991f1c4c750", name: "property-04", role: "panel", note: "Property #04" },
-  { id: "1502672260266-1c1ef2d93688", name: "lekki-bq", role: "panel", note: "Use case 01 / listing" },
 
   // --- Seeded listings ------------------------------------------------------
-  { id: "1493809842364-78817add7ffb", name: "chevron", role: "listing", note: "Chevron flat" },
-  { id: "1522708323590-d24dbb6b0267", name: "waterfront", role: "listing", note: "Waterfront / studio" },
-  { id: "1560448204-e02f11c3d0e2", name: "agungi", role: "listing", note: "Agungi apartment" },
-  { id: "1484154218962-a197022b5858", name: "osapa", role: "listing", note: "Osapa apartment" },
-  { id: "1493663284031-b7e3aefcae8e", name: "sangotedo", role: "listing", note: "Sangotedo flat" },
-  { id: "1502005229762-cf1b2da7c5d6", name: "ajah", role: "listing", note: "Ajah apartment" },
-  { id: "1568605114967-8130f3a36994", name: "ikoyi", role: "listing", note: "Ikoyi duplex" },
-  { id: "1545324418-cc1a3fa10c00", name: "vi-serviced", role: "listing", note: "Victoria Island" },
-  { id: "1505873242700-f289a29e1e0f", name: "yaba", role: "listing", note: "Yaba flat" },
-  { id: "1580587771525-78b9dba3b914", name: "ikeja", role: "listing", note: "Ikeja bungalow" },
+  // Named for what the photograph shows, not for where it is used, so a
+  // listing can be re-homed to another market without the name going stale.
+  { id: "1502672260266-1c1ef2d93688", name: "flat-calm", role: "listing", note: "Calm residential interior" },
+  { id: "1560185007-c5ca9d2c014d", name: "flat-balcony", role: "listing", note: "Interior with balcony light" },
+  { id: "1502005229762-cf1b2da7c5d6", name: "flat-stairwell", role: "listing", note: "Bright duplex stairwell" },
+  { id: "1567767292278-a4f21aa2d36e", name: "flat-bright", role: "listing", note: "Bright modern living room" },
+  { id: "1545324418-cc1a3fa10c00", name: "block-balconies", role: "listing", note: "Apartment block exterior" },
+  { id: "1493809842364-78817add7ffb", name: "flat-parquet", role: "listing", note: "Herringbone parquet, radiator" },
+  { id: "1560448204-e02f11c3d0e2", name: "flat-openplan", role: "listing", note: "Open plan with a view" },
+  { id: "1554995207-c18c203602cb", name: "flat-brick", role: "listing", note: "Brick and industrial" },
+  { id: "1600585154340-be6161a56a0c", name: "flat-modern", role: "listing", note: "Modern city apartment" },
+  { id: "1522798514-97ceb8c4f1c8", name: "courtyard-tropical", role: "listing", note: "Tiled tropical courtyard" },
+  { id: "1512918728675-ed5a9ecdebfd", name: "coastal-view", role: "listing", note: "Coastal outlook" },
+  { id: "1586023492125-27b2c045efd7", name: "tower-city", role: "listing", note: "High-rise city living" },
+  { id: "1484154218962-a197022b5858", name: "flat-serviced", role: "listing", note: "Serviced block interior" },
+  { id: "1583608205776-bfd35f0d9f83", name: "flat-warmwood", role: "listing", note: "Warm timber interior" },
 ];
 
 const OUT_DIR = join(process.cwd(), "public", "img");
