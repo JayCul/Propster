@@ -35,7 +35,6 @@ export function UseCases() {
                   srcSet={ART.useFind.srcSmall + " 900w, " + ART.useFind.src + " 2000w"}
                   sizes="(max-width: 1024px) 100vw, 46vw"
                   alt={ART.useFind.alt}
-                  loading="lazy"
                   className="h-full w-full object-cover grade-property"
                 />
               </div>
@@ -132,7 +131,6 @@ export function UseCases() {
                   srcSet={ART.useVerify.srcSmall + " 900w, " + ART.useVerify.src + " 2000w"}
                   sizes="(max-width: 1024px) 100vw, 46vw"
                   alt={ART.useVerify.alt}
-                  loading="lazy"
                   className="h-full w-full object-cover grade-property"
                 />
               </div>

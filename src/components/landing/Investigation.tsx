@@ -122,7 +122,6 @@ export function Investigation() {
                 srcSet={ART.subject.srcSmall + " 900w, " + ART.subject.src + " 2000w"}
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 alt={ART.subject.alt}
-                loading="lazy"
                 className="h-full w-full object-cover transition-[filter] duration-700"
                 style={{
                   filter:

@@ -19,7 +19,6 @@ export function FinalCTA() {
           srcSet={ART.finale.srcSmall + " 900w, " + ART.finale.src + " 2000w"}
           sizes="100vw"
           alt={ART.finale.alt}
-          loading="lazy"
           className="h-full w-full object-cover grade-investigation"
         />
         <div

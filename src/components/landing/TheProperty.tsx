@@ -42,7 +42,6 @@ export function TheProperty() {
             srcSet={ART.interior.srcSmall + " 900w, " + ART.interior.src + " 2000w"}
             sizes="100vw"
             alt={ART.interior.alt}
-            loading="lazy"
             className="h-full w-full object-cover"
             style={{
               filter: "saturate(" + saturation + ") brightness(" + brightness + ") contrast(1.06)",

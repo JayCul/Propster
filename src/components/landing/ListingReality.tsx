@@ -51,7 +51,6 @@ export function ListingReality() {
                   srcSet={ART.listing.srcSmall + " 900w, " + ART.listing.src + " 2000w"}
                   sizes="(max-width: 1024px) 100vw, 46vw"
                   alt={ART.listing.alt}
-                  loading="lazy"
                   className="h-full w-full object-cover grade-property"
                 />
               </div>

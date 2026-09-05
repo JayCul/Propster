@@ -9,6 +9,15 @@
  * page renders with no network access and no third-party CDN in the critical
  * path. Each name resolves to a pair: `<name>.webp` and `<name>-sm.webp`.
  * See `public/img/CREDITS.md` for sources.
+ *
+ * None of these images is lazy-loaded, deliberately. Most sit inside a
+ * `reveal-image` wrapper whose clip-path collapses the box to zero height until
+ * its observer fires; a lazy image in a zero-height box is correctly judged
+ * invisible by the browser and never fetched, so the picture would appear only
+ * if the reveal happened to win a race against the loader. On a deployed build
+ * that race was observed to lose, leaving six of eight images unloaded. These
+ * photographs carry the page's argument rather than decorating it, so they load
+ * eagerly and the reveal animates something that is already there.
  */
 
 export interface Artwork {

@@ -100,7 +100,6 @@ export function Evidence() {
                   <img
                     src={ART.listing.srcSmall}
                     alt={ART.listing.alt}
-                    loading="lazy"
                     className="h-full w-full object-cover grade-property"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void-900/80 to-transparent p-5">
