@@ -4,6 +4,7 @@ import type { Property, PropertyVerification as VerificationRow } from "@prisma/
 import {
   callVerificationResultSchema,
   buildCallResultJsonSchema,
+  RESERVED_DEMO_PHONE,
   type CallVerificationResult,
 } from "@/domain/schemas";
 import { detectDiscrepancies, hasHighSeverity } from "@/domain/discrepancy";
@@ -79,9 +80,46 @@ export function getPhoneProvider(): PhoneVerificationProvider {
   return cachedProvider;
 }
 
+let cachedMock: MockPhoneVerificationProvider | null = null;
+
+function mockProvider(): MockPhoneVerificationProvider {
+  cachedMock ??= new MockPhoneVerificationProvider();
+  return cachedMock;
+}
+
+/**
+ * Choose the provider for a specific listing, rather than for the whole app.
+ *
+ * The seeded demo corpus carries numbers in a reserved fictional range. Those
+ * can never reach the person they purport to, so handing one to a real
+ * telephone network is pointless at best: it burns call credits and, because
+ * the range is syntactically valid, risks ringing whoever does own it.
+ *
+ * Routing them to the simulated provider means a visitor can verify any seeded
+ * listing and watch the entire workflow run, while a number someone entered
+ * through /try — their own, with explicit consent — still gets a real call.
+ * That is what makes it safe to keep an allowlist configured in production
+ * without turning the public demo into a dead end.
+ */
+function providerForPhone(phone: string): PhoneVerificationProvider {
+  if (RESERVED_DEMO_PHONE.test(phone)) {
+    return mockProvider();
+  }
+  return getPhoneProvider();
+}
+
+/**
+ * Resolve the provider that started a call, so polling never asks the wrong one
+ * about a call it has never heard of.
+ */
+function providerById(id: string | null | undefined): PhoneVerificationProvider {
+  return id === "mock" ? mockProvider() : getPhoneProvider();
+}
+
 /** Test seam: drop the cached provider so config changes take effect. */
 export function resetPhoneProvider(): void {
   cachedProvider = null;
+  cachedMock = null;
 }
 
 export interface StartVerificationInput {
@@ -134,7 +172,7 @@ export async function startVerification(
 
   const listing = toListing(property);
   const objective = buildCallObjective(listing, input.requirement);
-  const provider = getPhoneProvider();
+  const provider = providerForPhone(property.agentPhone);
 
   const verification = await prisma.propertyVerification.create({
     data: { propertyId: property.id, searchId: input.searchId, status: "pending" },
@@ -254,7 +292,7 @@ export async function refreshVerification(verificationId: string): Promise<Verif
     return snapshot(verification.id);
   }
 
-  const provider = getPhoneProvider();
+  const provider = providerById(session.provider);
 
   try {
     const callStatus = await provider.getCallStatus(session.providerCallId);
