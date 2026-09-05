@@ -278,23 +278,52 @@ npm run setup
 
 ## 7. Environment variables
 
-Every variable is server-side only. Nothing is prefixed `NEXT_PUBLIC_`, so no
-secret can reach the browser bundle.
+Ordered by what you actually have to set. A production boot was verified with
+only the five in the first table.
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `DATABASE_URL` | yes | Defaults to `file:./dev.db`. Point at Postgres and change the provider in `prisma/schema.prisma` to deploy. |
-| `CALLE_API_KEY` | for live calls | CALL-E API key. **When set, Propster places real outbound calls.** Absent, it uses the deterministic demo provider. |
-| `CALLE_BASE_URL` | no | `https://api.heycall-e.com` (default) or `https://test-api.heycall-e.com`. |
-| `PUBLIC_APP_URL` | no | Public HTTPS URL of this instance. Set it to receive CALL-E webhooks; leave empty locally and Propster polls instead. |
-| `CALLE_WEBHOOK_TOKEN` | with webhooks | Unguessable secret forming the webhook path. CALL-E deliveries are unsigned, so this is what authenticates the receiver. |
-| `CALLE_PHONE_ALLOWLIST` | no | Comma-separated E.164 numbers. When set, no other number can be dialled. |
-| `ANTHROPIC_API_KEY` | no | Enables Claude for natural-language requirement extraction. Without it the deterministic parser is used. |
-| `ANTHROPIC_MODEL` | no | Defaults to `claude-sonnet-5`. |
-| `PROPSTER_DEMO_MODE` | no | `"true"` forces the simulated provider even when a CALL-E key is present. |
+### Required
 
-Propster works completely without any API key. It tells you which mode it is in
-on the search page, on the dashboard, and on every call it records.
+| Variable | Why |
+| --- | --- |
+| `DATABASE_URL` | Neon **pooled** connection (host contains `-pooler`) |
+| `CALLE_API_KEY` | Places real calls. Absent, the simulated provider runs instead |
+| `GROQ_API_KEY` | Transcript and requirement extraction |
+| `GROQ_MODEL` | `qwen/qwen3.8-27b`; without it the default is a different model |
+| `CALLE_PHONE_ALLOWLIST` | Only these numbers may be dialled. Set it on anything internet-facing |
+
+### After deploying
+
+Set once the app has a public HTTPS URL. Without them CALL-E results are
+collected by polling, which works but is slower.
+
+| Variable | Why |
+| --- | --- |
+| `PUBLIC_APP_URL` | e.g. `https://propster.vercel.app`, no trailing slash |
+| `CALLE_WEBHOOK_TOKEN` | A long random string you invent. CALL-E deliveries are unsigned, so this unguessable path segment authenticates the receiver |
+
+### Local only — never set on the host
+
+| Variable | Why |
+| --- | --- |
+| `DIRECT_DB_URL` | Neon **direct** connection. Needed by `prisma db push`; pgBouncer cannot run its DDL. The runtime client never reads it |
+| `DEMO_AGENT_PHONE` | The one seeded listing that may be dialled. Read by `npm run db:seed` only — the seeded rows already live in the database |
+
+### Defaults
+
+`LLM_PROVIDER` (`auto`), `PROPSTER_DEMO_MODE` (`false`), `CALLE_BASE_URL`,
+`GROQ_BASE_URL`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`. Set one only to change
+it. With just a Groq key present, `auto` selects Groq.
+
+### Deploying to Vercel
+
+Set the Build Command to:
+
+```
+prisma generate && next build
+```
+
+The default `next build` does not generate the Prisma client and the deploy
+will fail without it.
 
 ## 8. Running locally
 
